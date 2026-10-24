@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NBA shot selection, 2025-26</title>
+  <meta name="description" content="Interactive findings from the 2025-26 NBA shot-selection exploration: which distances score, and how team shot mix differs.">
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --sheet: #faf7f2;
+      --ink: #1c1916;
+      --muted: #5c564c;
+      --line: #ddd4c6;
+      --green: #1f5c45;
+      --rust: #9a3412;
+      --blue: #1e4d7b;
+      --gold: #8a6a12;
+      --focus: #1d4ed8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    h1, h2, h3, .figure {
+      font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+      font-weight: 560;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+    }
+
+    h1 { font-size: clamp(2.1rem, 4vw, 3.35rem); margin: 0.2rem 0 0.8rem; }
+    h2 { font-size: clamp(1.6rem, 2.4vw, 2.1rem); margin: 0 0 0.4rem; }
+    h3 { font-size: 1.15rem; margin: 0 0 0.4rem; }
+
+    p { margin: 0.4rem 0 0.8rem; }
+
+    a { color: var(--blue); }
+    a:hover { color: var(--ink); }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .skip {
+      position: absolute;
+      left: 1rem;
+      top: -4rem;
+      background: var(--ink);
+      color: var(--sheet);
+      padding: 0.5rem 0.8rem;
+      z-index: 5;
+    }
+
+    .skip:focus { top: 0.75rem; }
+
+    .wrap {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    header.wrap { padding: 2.2rem 0 1rem; }
+
+    .kicker {
+      margin: 0;
+      color: var(--rust);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .lede { font-size: 1.12rem; max-width: 44rem; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: rgba(243, 239, 230, 0.94);
+      border-bottom: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+    }
+
+    .nav .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+      padding: 0.55rem 0;
+    }
+
+    .nav a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .nav a:hover { text-decoration: underline; }
+
+    main { padding-bottom: 3rem; }
+
+    section {
+      padding: 1.8rem 0 0.4rem;
+      scroll-margin-top: 3.2rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .card {
+      background: var(--sheet);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--green);
+      margin: 0;
+      padding: 0.85rem 0.95rem 1rem;
+    }
+
+    .card:nth-child(2) { border-top-color: var(--rust); }
+    .card:nth-child(3) { border-top-color: var(--blue); }
+    .card:nth-child(4) { border-top-color: var(--gold); }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .figure {
+      font-size: 2.35rem;
+      margin: 0.4rem 0 0.45rem;
+    }
+
+    .card p:last-child { margin-bottom: 0; }
+
+    .note {
+      border-left: 3px solid var(--rust);
+      margin-top: 0.6rem;
+      padding-left: 0.85rem;
+      max-width: 46rem;
+    }
+
+    .toolbar, .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+      align-items: end;
+      margin: 0.6rem 0 0.8rem;
+    }
+
+    label { font-size: 0.92rem; color: var(--muted); }
+
+    input[type="search"] {
+      display: block;
+      margin-top: 0.2rem;
+      min-height: 2.6rem;
+      min-width: min(18rem, 100%);
+      border: 1px solid var(--line);
+      background: var(--sheet);
+      color: var(--ink);
+      padding: 0.35rem 0.6rem;
+      font: inherit;
+    }
+
+    button {
+      font: inherit;
+      color: var(--ink);
+      background: var(--sheet);
+      border: 1px solid var(--line);
+      min-height: 2.5rem;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--ink); }
+
+    button[aria-pressed="true"] {
+      background: var(--green);
+      border-color: var(--green);
+      color: #f7f4ee;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--sheet);
+      border: 1px solid var(--line);
+      padding: 0.75rem;
+    }
+
+    .scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    caption {
+      text-align: left;
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+    }
+
+    th, td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th button {
+      background: transparent;
+      border: 0;
+      min-height: 2rem;
+      padding: 0.15rem;
+      font-weight: 650;
+    }
+
+    tbody tr[data-selected="true"] { background: #e7f2ec; }
+
+    tbody tr.is-active { background: #f3e4d4; }
+
+    .num { font-variant-numeric: tabular-nums; }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 3rem 1fr 4.6rem;
+      gap: 0.4rem;
+      align-items: center;
+      min-height: 1.55rem;
+      font-size: 0.86rem;
+    }
+
+    .track {
+      display: block;
+      height: 0.72rem;
+      background: #efe8dc;
+      position: relative;
+    }
+
+    .fill {
+      display: block;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .chart-row[data-selected="true"] .fill { background: var(--rust); }
+
+    .stack {
+      display: flex;
+      height: 1.7rem;
+      width: 100%;
+      background: #efe8dc;
+      overflow: hidden;
+    }
+
+    .stack span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 0.72rem;
+      overflow: hidden;
+    }
+
+    .mix-row, .ppa-row {
+      display: grid;
+      grid-template-columns: 7.5rem 1fr;
+      gap: 0.55rem;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.9rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.2rem 0 0.8rem;
+      font-size: 0.88rem;
+    }
+
+    .legend li, .chip { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+    .swatch {
+      width: 0.8rem;
+      height: 0.8rem;
+      display: inline-block;
+      flex: none;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.7rem; }
+
+    .ppa-block { margin-bottom: 0.85rem; }
+
+    .ppa-row { grid-template-columns: 4.5rem 1fr auto; font-size: 0.9rem; }
+
+    .heat-wrap { overflow-x: auto; }
+
+    .heat {
+      display: grid;
+      grid-template-columns: 4.6rem repeat(5, minmax(4.6rem, 1fr));
+      gap: 3px;
+      min-width: 680px;
+    }
+
+    .heat .heat-head, .heat button, .heat .league-label {
+      min-height: 2.35rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
+    .heat .heat-head, .heat .league-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .heat button.heat-team, .heat .league-label {
+      justify-content: flex-start;
+      padding-left: 0.35rem;
+      position: sticky;
+      left: 0;
+      background: var(--sheet);
+      z-index: 1;
+    }
+
+    .heat button.heat-team[aria-pressed="true"] { box-shadow: inset 3px 0 0 var(--green); }
+
+    .court-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.15fr) minmax(260px, 0.85fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    #court { width: 100%; height: auto; background: #f7f3ea; border: 1px solid var(--line); }
+
+    .zone path { stroke: #faf7f2; stroke-width: 1.4; cursor: pointer; }
+    .zone.is-active path { stroke: #1c1916; stroke-width: 3; }
+    .court-lines { fill: none; stroke: #1c1916; stroke-width: 1.5; pointer-events: none; }
+    .court-lines.dashed { stroke-dasharray: 5 4; }
+    .zone text {
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      font-size: 13px;
+      text-anchor: middle;
+      pointer-events: none;
+      fill: #1c1916;
+      stroke: #faf7f2;
+      stroke-width: 4px;
+      paint-order: stroke;
+    }
+
+    .detail h3 { margin-top: 0.2rem; }
+    .detail .big {
+      font-family: "Iowan Old Style", Palatino, Georgia, serif;
+      font-size: 2rem;
+      margin: 0.2rem 0;
+    }
+
+    .small-sample { color: var(--rust); }
+
+    .scale {
+      height: 0.7rem;
+      margin: 0.35rem 0;
+      background: linear-gradient(90deg, #f4ece0, #144a38);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .error {
+      background: #f8e6dc;
+      border: 1px solid var(--rust);
+      padding: 0.7rem 0.9rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      padding: 1rem 0 2rem;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 980px) {
+      .cards, .split, .court-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#findings">Skip to findings</a>
+  <header class="wrap">
+    <p class="kicker">2025-26 regular season · field goals · 30 teams</p>
+    <h1>How does shot selection differ across NBA teams, and which shot zones contribute the most points per attempt?</h1>
+    <p class="lede">Inside 4 feet is the most efficient distance group. Three-pointers produce the most points. Team points per attempt run from Denver at 1.154 to Brooklyn at 1.041, and three-point share runs from Golden State at 49.7% to Sacramento at 33.9%.</p>
+    <p>219,159 field goal attempts from 621,881 in-scope actions. Heaves left out: 1,093. Free throws left out: 57,768. Every team has 82 games. Zero two-pointers have an unknown distance.</p>
+  </header>
+  <nav class="nav" aria-label="Sections">
+    <div class="wrap">
+      <a href="#findings">Findings</a>
+      <a href="#teams">Team rates</a>
+      <a href="#mix">Shot mix</a>
+      <a href="#court-section">Court</a>
+      <a href="#limits">Limits</a>
+    </div>
+  </nav>
+  <main class="wrap">
+    <p id="load-error" class="error" hidden>The charts could not be drawn from the embedded tables.</p>
+    <noscript>
+      <p class="note">The written findings stay on this page without JavaScript. The charts, sorting, and court need JavaScript.</p>
+    </noscript>
+
+    <section id="findings" aria-labelledby="findings-title">
+      <h2 id="findings-title">Findings</h2>
+      <div class="cards">
+        <article class="card">
+          <p class="eyebrow">Highest points per attempt</p>
+          <p class="figure">1.373</p>
+          <p>Shots inside 4 feet, on 56,943 attempts (26.0% of field goals).</p>
+        </article>
+        <article class="card">
+          <p class="eyebrow">Most points</p>
+          <p class="figure">98,151</p>
+          <p>From three-pointers, on 90,970 attempts at 1.079 points per attempt.</p>
+        </article>
+        <article class="card">
+          <p class="eyebrow">Team scoring gap</p>
+          <p class="figure">0.113</p>
+          <p>Points per attempt from Denver (1.154) to Brooklyn (1.041).</p>
+        </article>
+        <article class="card">
+          <p class="eyebrow">Three-point share</p>
+          <p class="figure">49.7%</p>
+          <p>Golden State, 3,616 attempts. Sacramento is at 33.9% on 2,476.</p>
+        </article>
+      </div>
+      <p class="note">These are descriptive observations. They do not identify causal effects. A high points-per-attempt describes the shots that were taken. It does not say that taking more of those shots would raise scoring.</p>
+    </section>
+
+    <section id="teams" aria-labelledby="teams-title">
+      <h2 id="teams-title">Team rates</h2>
+      <p>Points per attempt and effective field-goal percentage use each team’s makes and attempts. The zoomed chart is the scale from the notebook, so the gap stays visible. Switch to “From zero” to see that gap against a full axis.</p>
+      <div class="toolbar">
+        <label>Find a team
+          <input id="team-search" type="search" autocomplete="off" placeholder="DEN or Denver">
+        </label>
+        <div id="metric-controls" role="group" aria-label="Chart metric">
+          <button type="button" data-metric="ppa" aria-pressed="true">Points per attempt</button>
+          <button type="button" data-metric="efg" aria-pressed="false">Effective FG%</button>
+          <button type="button" data-metric="fga" aria-pressed="false">Attempts</button>
+          <button type="button" data-metric="points" aria-pressed="false">Points</button>
+        </div>
+        <div id="scale-controls" role="group" aria-label="Chart scale">
+          <button type="button" data-scale="zoom" aria-pressed="true">Observed range</button>
+          <button type="button" data-scale="zero" aria-pressed="false">From zero</button>
+        </div>
+      </div>
+      <p id="filter-status" aria-live="polite"></p>
+      <p id="compare-status" aria-live="polite"></p>
+      <div class="split">
+        <div class="panel scroll">
+          <table id="team-table">
+            <caption>Team scoring rates, 2025-26</caption>
+            <thead>
+              <tr>
+                <th data-sort-col="team" aria-sort="none" scope="col"><button type="button" data-sort="team">Team</button></th>
+                <th data-sort-col="games" aria-sort="none" scope="col"><button type="button" data-sort="games">Games</button></th>
+                <th data-sort-col="fga" aria-sort="none" scope="col"><button type="button" data-sort="fga">Attempts</button></th>
+                <th data-sort-col="points" aria-sort="none" scope="col"><button type="button" data-sort="points">Points</button></th>
+                <th data-sort-col="ppa" aria-sort="descending" scope="col"><button type="button" data-sort="ppa">PPA</button></th>
+                <th data-sort-col="efg" aria-sort="none" scope="col"><button type="button" data-sort="efg">eFG</button></th>
+                <th scope="col">Compare</th>
+              </tr>
+            </thead>
+            <tbody id="team-body">
+              <tr><td colspan="7">Team rows load from the embedded summary.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3 id="chart-title">Points per attempt</h3>
+          <p id="scale-note"></p>
+          <div id="team-chart" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mix" aria-labelledby="mix-title">
+      <h2 id="mix-title">Shot mix</h2>
+      <p>Read volume and efficiency together. The stacked bar is the share of each team’s attempts. The bars under it are points per attempt on a fixed axis from 0 to 1.70. Long twos can be a small slice and still a poor rate.</p>
+      <div id="presets" class="controls" role="group" aria-label="Comparison presets">
+        <button type="button" data-preset="ppa">PPA ends: DEN, BKN</button>
+        <button type="button" data-preset="threes">Three-point ends: GSW, SAC</button>
+        <button type="button" data-preset="court">Court teams: NYK, CLE, DEN, LAL</button>
+        <button type="button" data-preset="clear">Clear</button>
+        <button type="button" id="league-toggle" aria-pressed="true">League in the comparison</button>
+      </div>
+      <div id="chips" class="chips" aria-label="Selected teams"></div>
+      <ul id="stack-legend" class="legend"></ul>
+      <div id="stack-chart" aria-hidden="true"></div>
+      <h3>Points per attempt by distance</h3>
+      <div id="ppa-chart" aria-hidden="true"></div>
+      <div class="scroll panel">
+        <table id="mix-table">
+          <caption>Share of attempts and points per attempt for the selected teams</caption>
+          <thead>
+            <tr>
+              <th scope="col">Team</th>
+              <th scope="col">Under 4 ft</th>
+              <th scope="col">4–10 ft</th>
+              <th scope="col">10–16 ft</th>
+              <th scope="col">16+ ft</th>
+              <th scope="col">Threes</th>
+            </tr>
+          </thead>
+          <tbody id="mix-body">
+            <tr><td colspan="6">Select a team to compare its shot mix.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>All 30 teams</h3>
+      <p>Cell color is the share of that team’s attempts. The notebook sorts this grid by three-point share. Focus or hover a cell for the points per attempt.</p>
+      <div id="heat-sort" class="controls" role="group" aria-label="Heatmap order">
+        <button type="button" data-heat-sort="three" aria-pressed="true">By three-point share</button>
+        <button type="button" data-heat-sort="ppa" aria-pressed="false">By team points per attempt</button>
+      </div>
+      <p id="heat-detail" aria-live="polite"></p>
+      <div class="heat-wrap panel">
+        <div id="heat" class="heat"></div>
+      </div>
+    </section>
+
+    <section id="court-section" aria-labelledby="court-title">
+      <h2 id="court-title">Court sections</h2>
+      <p>The notebook’s court chart covers four teams: the New York Knicks, Cleveland Cavaliers, Denver Nuggets, and Los Angeles Lakers. Sections are geometric, not official NBA shot zones. The basket is at the top. The drawing stops 32 feet from the basket; shots farther upcourt still count in the wings.</p>
+      <p>Among these four, Cleveland has the highest share above the break (33.4%, 1.064 points per attempt). New York has the highest corner share (13.5%, 1.246). Denver has the highest midrange share (11.6%, 0.903). The square with the most points on every one of these maps sits at the rim.</p>
+      <div id="court-teams" class="controls" role="group" aria-label="Court team">
+        <button type="button" data-court-team="NYK" aria-pressed="false">NYK</button>
+        <button type="button" data-court-team="CLE" aria-pressed="false">CLE</button>
+        <button type="button" data-court-team="DEN" aria-pressed="true">DEN</button>
+        <button type="button" data-court-team="LAL" aria-pressed="false">LAL</button>
+      </div>
+      <div id="court-metrics" class="controls" role="group" aria-label="Court color">
+        <button type="button" data-court-metric="ppa" aria-pressed="true">Color by points per attempt</button>
+        <button type="button" data-court-metric="fg" aria-pressed="false">Color by field-goal percentage</button>
+      </div>
+      <p>Field-goal percentage counts a three the same as a two. Points per attempt gives the three its extra point. The same color scale is used for every team. Sections under 100 attempts are marked as a small sample.</p>
+      <div class="court-layout">
+        <div>
+          <svg id="court" viewBox="0 0 640 520" role="group" aria-label="Half-court sections for the selected team. The basket is at the top. Choose a section in the table to read its rate."></svg>
+          <div class="scale" id="court-scale"></div>
+          <div class="scale-labels"><span id="scale-low"></span><span id="scale-high"></span></div>
+        </div>
+        <div class="detail panel" id="zone-detail" aria-live="polite"></div>
+      </div>
+      <p id="coverage-note"></p>
+      <div id="court-sort" class="controls" role="group" aria-label="Section order">
+        <button type="button" data-court-sort="layout" aria-pressed="true">Court order</button>
+        <button type="button" data-court-sort="ppa" aria-pressed="false">By points per attempt</button>
+        <button type="button" data-court-sort="attempts" aria-pressed="false">By attempts</button>
+      </div>
+      <div class="scroll panel">
+        <table id="court-list">
+          <caption>Section totals for the team on the court</caption>
+          <thead>
+            <tr>
+              <th scope="col">Section</th>
+              <th scope="col">Attempts</th>
+              <th scope="col">Makes</th>
+              <th scope="col">FG%</th>
+              <th scope="col">Points</th>
+              <th scope="col">PPA</th>
+            </tr>
+          </thead>
+          <tbody id="court-body"></tbody>
+        </table>
+      </div>
+      <div class="scroll panel">
+        <table id="region-table">
+          <caption>Broader regions for the four mapped teams. A cell is attempt share and points per attempt.</caption>
+          <thead id="region-head"></thead>
+          <tbody id="region-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="limits" aria-labelledby="limits-title">
+      <h2 id="limits-title">What this does not show</h2>
+      <ul>
+        <li>Distance bands are analytical groups, separate from official NBA shot zones. Two-pointers split at 4, 10, and 16 feet. Every three-pointer stays in one group.</li>
+        <li>A shot on the corner side of the 22-foot line is a corner three even when it is closer than the 23.75-foot arc.</li>
+        <li>Coordinates treat xLegacy and yLegacy as tenths of a foot from the basket. Shots past half court stay in the team totals and off the drawing.</li>
+        <li>The notebook’s grid maps leave efficiency squares under 20 attempts blank. This page keeps those shots in the section total and shows the attempt count.</li>
+        <li>Heaves and free throws sit outside the attempt set. Possessions, turnovers, the shooter, the defender, and shot difficulty are outside this pass.</li>
+        <li>The scope is the 2025-26 regular season.</li>
+      </ul>
+      <p class="note">These are descriptive observations. They do not identify causal effects.</p>
+    </section>
+  </main>
+  <footer>
+    <div class="wrap">
+      <p>Built from the shot tables written by the play-by-play exploration in this folder. Analysis run 2026-10-24 02:21 UTC. Open this file locally; the tables are embedded in the page.</p>
+    </div>
+  </footer>
+
+  <!-- Numbers in shot-data are written by build_eda_findings.py from data/eda/shot_selection. -->
+  <script type="application/json" id="shot-data">{"meta":{"season":"2025-26","shotRows":219159,"actionRows":621881,"heavesExcluded":1093,"freeThrowsExcluded":57768,"unknownDistanceTwos":0,"teams":30,"analysisRunUtc":"2026-10-24T02:21:52.598161+00:00"},"teams":[{"team":"ATL","name":"Atlanta Hawks","season":"2025-26","games":82,"fga":7541,"fgm":3575,"fg3m":1201,"points":8351,"ppa":1.1074128099721523,"efg":0.5537064049860762},{"team":"BKN","name":"Brooklyn Nets","season":"2025-26","games":82,"fga":6933,"fgm":3071,"fg3m":1073,"points":7215,"ppa":1.0406750324534833,"efg":0.5203375162267416},{"team":"BOS","name":"Boston Celtics","season":"2025-26","games":82,"fga":7398,"fgm":3456,"fg3m":1268,"points":8180,"ppa":1.1057042443903757,"efg":0.5528521221951879},{"team":"CHA","name":"Charlotte Hornets","season":"2025-26","games":82,"fga":7292,"fgm":3357,"fg3m":1343,"points":8057,"ppa":1.1049094898518925,"efg":0.5524547449259463},{"team":"CHI","name":"Chicago Bulls","season":"2025-26","games":82,"fga":7417,"fgm":3476,"fg3m":1169,"points":8121,"ppa":1.09491708237832,"efg":0.54745854118916},{"team":"CLE","name":"Cleveland Cavaliers","season":"2025-26","games":82,"fga":7381,"fgm":3554,"fg3m":1173,"points":8281,"ppa":1.121934697195502,"efg":0.560967348597751},{"team":"DAL","name":"Dallas Mavericks","season":"2025-26","games":82,"fga":7366,"fgm":3432,"fg3m":899,"points":7763,"ppa":1.0538962802063536,"efg":0.5269481401031768},{"team":"DEN","name":"Denver Nuggets","season":"2025-26","games":82,"fga":7196,"fgm":3570,"fg3m":1161,"points":8301,"ppa":1.1535575319622011,"efg":0.5767787659811006},{"team":"DET","name":"Detroit Pistons","season":"2025-26","games":82,"fga":7340,"fgm":3560,"fg3m":902,"points":8022,"ppa":1.09291553133515,"efg":0.546457765667575},{"team":"GSW","name":"Golden State Warriors","season":"2025-26","games":82,"fga":7280,"fgm":3357,"fg3m":1286,"points":8000,"ppa":1.098901098901099,"efg":0.5494505494505495},{"team":"HOU","name":"Houston Rockets","season":"2025-26","games":82,"fga":7361,"fgm":3523,"fg3m":940,"points":7986,"ppa":1.0849069419915773,"efg":0.5424534709957887},{"team":"IND","name":"Indiana Pacers","season":"2025-26","games":82,"fga":7304,"fgm":3346,"fg3m":1097,"points":7789,"ppa":1.0664019715224535,"efg":0.5332009857612268},{"team":"LAC","name":"Los Angeles Clippers","season":"2025-26","games":82,"fga":6857,"fgm":3322,"fg3m":1019,"points":7663,"ppa":1.1175441155024064,"efg":0.5587720577512032},{"team":"LAL","name":"Los Angeles Lakers","season":"2025-26","games":82,"fga":6863,"fgm":3448,"fg3m":970,"points":7866,"ppa":1.1461460002914177,"efg":0.5730730001457088},{"team":"MEM","name":"Memphis Grizzlies","season":"2025-26","games":82,"fga":7431,"fgm":3390,"fg3m":1143,"points":7923,"ppa":1.0662091239402502,"efg":0.5331045619701251},{"team":"MIA","name":"Miami Heat","season":"2025-26","games":82,"fga":7648,"fgm":3582,"fg3m":1123,"points":8287,"ppa":1.0835512552301256,"efg":0.5417756276150628},{"team":"MIL","name":"Milwaukee Bucks","season":"2025-26","games":82,"fga":7012,"fgm":3345,"fg3m":1240,"points":7930,"ppa":1.1309184255561895,"efg":0.5654592127780947},{"team":"MIN","name":"Minnesota Timberwolves","season":"2025-26","games":82,"fga":7260,"fgm":3495,"fg3m":1128,"points":8118,"ppa":1.1181818181818182,"efg":0.5590909090909091},{"team":"NOP","name":"New Orleans Pelicans","season":"2025-26","games":82,"fga":7420,"fgm":3455,"fg3m":914,"points":7824,"ppa":1.0544474393530998,"efg":0.5272237196765499},{"team":"NYK","name":"New York Knicks","season":"2025-26","games":82,"fga":7328,"fgm":3500,"fg3m":1168,"points":8168,"ppa":1.1146288209606987,"efg":0.5573144104803494},{"team":"OKC","name":"Oklahoma City Thunder","season":"2025-26","games":82,"fga":7307,"fgm":3534,"fg3m":1135,"points":8203,"ppa":1.1226221431504038,"efg":0.5613110715752019},{"team":"ORL","name":"Orlando Magic","season":"2025-26","games":82,"fga":7244,"fgm":3363,"fg3m":961,"points":7687,"ppa":1.0611540585311983,"efg":0.5305770292655991},{"team":"PHI","name":"Philadelphia 76ers","season":"2025-26","games":82,"fga":7404,"fgm":3422,"fg3m":1011,"points":7855,"ppa":1.060913019989195,"efg":0.5304565099945975},{"team":"PHX","name":"Phoenix Suns","season":"2025-26","games":82,"fga":7389,"fgm":3362,"fg3m":1210,"points":7934,"ppa":1.0737582893490323,"efg":0.5368791446745161},{"team":"POR","name":"Portland Trail Blazers","season":"2025-26","games":82,"fga":7389,"fgm":3350,"fg3m":1186,"points":7886,"ppa":1.0672621464338883,"efg":0.5336310732169441},{"team":"SAC","name":"Sacramento Kings","season":"2025-26","games":82,"fga":7299,"fgm":3408,"fg3m":843,"points":7659,"ppa":1.0493218249075216,"efg":0.5246609124537608},{"team":"SAS","name":"San Antonio Spurs","season":"2025-26","games":82,"fga":7371,"fgm":3562,"fg3m":1116,"points":8240,"ppa":1.1178944512277846,"efg":0.5589472256138923},{"team":"TOR","name":"Toronto Raptors","season":"2025-26","games":82,"fga":7250,"fgm":3495,"fg3m":932,"points":7922,"ppa":1.092689655172414,"efg":0.546344827586207},{"team":"UTA","name":"Utah Jazz","season":"2025-26","games":82,"fga":7469,"fgm":3489,"fg3m":1036,"points":8014,"ppa":1.0729682688445574,"efg":0.5364841344222787},{"team":"WAS","name":"Washington Wizards","season":"2025-26","games":82,"fga":7409,"fgm":3428,"fg3m":1070,"points":7926,"ppa":1.0697799973005804,"efg":0.5348899986502902}],"groups":[{"team":"ATL","group":"Three-pointers","fga":3237,"fgm":1201,"fg3m":1201,"points":3603,"fgPct":0.3710225517454433,"ppa":1.11306765523633,"efg":0.556533827618165,"share":0.42925341466648986},{"team":"ATL","group":"2PT: under 4 ft","fga":2009,"fgm":1354,"fg3m":0,"points":2708,"fgPct":0.6739671478347437,"ppa":1.3479342956694873,"efg":0.6739671478347437,"share":0.26641029041241215},{"team":"ATL","group":"2PT: 4 to under 10 ft","fga":1269,"fgm":565,"fg3m":0,"points":1130,"fgPct":0.44523246650906223,"ppa":0.8904649330181245,"efg":0.44523246650906223,"share":0.16828006895637185},{"team":"ATL","group":"2PT: 10 to under 16 ft","fga":691,"fgm":319,"fg3m":0,"points":638,"fgPct":0.46164978292329956,"ppa":0.9232995658465991,"efg":0.46164978292329956,"share":0.09163240949476197},{"team":"ATL","group":"2PT: 16+ ft","fga":335,"fgm":136,"fg3m":0,"points":272,"fgPct":0.4059701492537313,"ppa":0.8119402985074626,"efg":0.4059701492537313,"share":0.0444238164699642},{"team":"BKN","group":"Three-pointers","fga":3152,"fgm":1073,"fg3m":1073,"points":3219,"fgPct":0.3404187817258883,"ppa":1.021256345177665,"efg":0.5106281725888325,"share":0.4546372421751046},{"team":"BKN","group":"2PT: under 4 ft","fga":1839,"fgm":1220,"fg3m":0,"points":2440,"fgPct":0.6634040239260468,"ppa":1.3268080478520936,"efg":0.6634040239260468,"share":0.2652531371700563},{"team":"BKN","group":"2PT: 4 to under 10 ft","fga":1217,"fgm":494,"fg3m":0,"points":988,"fgPct":0.4059161873459326,"ppa":0.8118323746918652,"efg":0.4059161873459326,"share":0.1755372854464157},{"team":"BKN","group":"2PT: 10 to under 16 ft","fga":446,"fgm":187,"fg3m":0,"points":374,"fgPct":0.4192825112107623,"ppa":0.8385650224215246,"efg":0.4192825112107623,"share":0.06433001586614741},{"team":"BKN","group":"2PT: 16+ ft","fga":279,"fgm":97,"fg3m":0,"points":194,"fgPct":0.34767025089605735,"ppa":0.6953405017921147,"efg":0.34767025089605735,"share":0.040242319342276074},{"team":"BOS","group":"Three-pointers","fga":3456,"fgm":1268,"fg3m":1268,"points":3804,"fgPct":0.36689814814814814,"ppa":1.1006944444444444,"efg":0.5503472222222222,"share":0.46715328467153283},{"team":"BOS","group":"2PT: under 4 ft","fga":1389,"fgm":1016,"fg3m":0,"points":2032,"fgPct":0.7314614830813535,"ppa":1.462922966162707,"efg":0.7314614830813535,"share":0.18775344687753448},{"team":"BOS","group":"2PT: 4 to under 10 ft","fga":1177,"fgm":555,"fg3m":0,"points":1110,"fgPct":0.4715378079864061,"ppa":0.9430756159728122,"efg":0.4715378079864061,"share":0.1590970532576372},{"team":"BOS","group":"2PT: 10 to under 16 ft","fga":830,"fgm":408,"fg3m":0,"points":816,"fgPct":0.491566265060241,"ppa":0.983132530120482,"efg":0.491566265060241,"share":0.11219248445525817},{"team":"BOS","group":"2PT: 16+ ft","fga":546,"fgm":209,"fg3m":0,"points":418,"fgPct":0.38278388278388276,"ppa":0.7655677655677655,"efg":0.38278388278388276,"share":0.07380373073803731},{"team":"CHA","group":"Three-pointers","fga":3549,"fgm":1343,"fg3m":1343,"points":4029,"fgPct":0.3784164553395323,"ppa":1.1352493660185967,"efg":0.5676246830092984,"share":0.4866977509599561},{"team":"CHA","group":"2PT: under 4 ft","fga":1737,"fgm":1185,"fg3m":0,"points":2370,"fgPct":0.6822107081174439,"ppa":1.3644214162348878,"efg":0.6822107081174439,"share":0.2382062534284147},{"team":"CHA","group":"2PT: 4 to under 10 ft","fga":1231,"fgm":523,"fg3m":0,"points":1046,"fgPct":0.4248578391551584,"ppa":0.8497156783103168,"efg":0.4248578391551584,"share":0.16881513987931981},{"team":"CHA","group":"2PT: 10 to under 16 ft","fga":560,"fgm":226,"fg3m":0,"points":452,"fgPct":0.4035714285714286,"ppa":0.8071428571428572,"efg":0.4035714285714286,"share":0.07679648930334614},{"team":"CHA","group":"2PT: 16+ ft","fga":215,"fgm":80,"fg3m":0,"points":160,"fgPct":0.37209302325581395,"ppa":0.7441860465116279,"efg":0.37209302325581395,"share":0.02948436642896325},{"team":"CHI","group":"Three-pointers","fga":3287,"fgm":1169,"fg3m":1169,"points":3507,"fgPct":0.3556434438697901,"ppa":1.0669303316093703,"efg":0.5334651658046852,"share":0.44317109343400296},{"team":"CHI","group":"2PT: under 4 ft","fga":2468,"fgm":1584,"fg3m":0,"points":3168,"fgPct":0.6418152350081038,"ppa":1.2836304700162076,"efg":0.6418152350081038,"share":0.3327490899285425},{"team":"CHI","group":"2PT: 4 to under 10 ft","fga":1152,"fgm":493,"fg3m":0,"points":986,"fgPct":0.4279513888888889,"ppa":0.8559027777777778,"efg":0.4279513888888889,"share":0.15531886207361467},{"team":"CHI","group":"2PT: 10 to under 16 ft","fga":340,"fgm":167,"fg3m":0,"points":334,"fgPct":0.49117647058823527,"ppa":0.9823529411764705,"efg":0.49117647058823527,"share":0.045840636375893216},{"team":"CHI","group":"2PT: 16+ ft","fga":170,"fgm":63,"fg3m":0,"points":126,"fgPct":0.37058823529411766,"ppa":0.7411764705882353,"efg":0.37058823529411766,"share":0.022920318187946608},{"team":"CLE","group":"Three-pointers","fga":3261,"fgm":1173,"fg3m":1173,"points":3519,"fgPct":0.35970561177552896,"ppa":1.079116835326587,"efg":0.5395584176632935,"share":0.44181005283836877},{"team":"CLE","group":"2PT: under 4 ft","fga":2012,"fgm":1393,"fg3m":0,"points":2786,"fgPct":0.6923459244532804,"ppa":1.3846918489065607,"efg":0.6923459244532804,"share":0.27259178973038883},{"team":"CLE","group":"2PT: 4 to under 10 ft","fga":1173,"fgm":562,"fg3m":0,"points":1124,"fgPct":0.47911338448422847,"ppa":0.9582267689684569,"efg":0.47911338448422847,"share":0.15892155534480423},{"team":"CLE","group":"2PT: 10 to under 16 ft","fga":654,"fgm":321,"fg3m":0,"points":642,"fgPct":0.4908256880733945,"ppa":0.981651376146789,"efg":0.4908256880733945,"share":0.08860587996206476},{"team":"CLE","group":"2PT: 16+ ft","fga":281,"fgm":105,"fg3m":0,"points":210,"fgPct":0.3736654804270463,"ppa":0.7473309608540926,"efg":0.3736654804270463,"share":0.03807072212437339},{"team":"DAL","group":"Three-pointers","fga":2615,"fgm":899,"fg3m":899,"points":2697,"fgPct":0.3437858508604206,"ppa":1.031357552581262,"efg":0.515678776290631,"share":0.3550095031224545},{"team":"DAL","group":"2PT: under 4 ft","fga":1913,"fgm":1309,"fg3m":0,"points":2618,"fgPct":0.6842655514898066,"ppa":1.3685311029796132,"efg":0.6842655514898066,"share":0.25970676079283195},{"team":"DAL","group":"2PT: 4 to under 10 ft","fga":1446,"fgm":657,"fg3m":0,"points":1314,"fgPct":0.45435684647302904,"ppa":0.9087136929460581,"efg":0.45435684647302904,"share":0.19630735813195765},{"team":"DAL","group":"2PT: 10 to under 16 ft","fga":815,"fgm":353,"fg3m":0,"points":706,"fgPct":0.4331288343558282,"ppa":0.8662576687116564,"efg":0.4331288343558282,"share":0.11064349714906327},{"team":"DAL","group":"2PT: 16+ ft","fga":577,"fgm":214,"fg3m":0,"points":428,"fgPct":0.3708838821490468,"ppa":0.7417677642980935,"efg":0.3708838821490468,"share":0.07833288080369265},{"team":"DEN","group":"Three-pointers","fga":2934,"fgm":1161,"fg3m":1161,"points":3483,"fgPct":0.39570552147239263,"ppa":1.187116564417178,"efg":0.593558282208589,"share":0.4077265147304058},{"team":"DEN","group":"2PT: under 4 ft","fga":1732,"fgm":1214,"fg3m":0,"points":2428,"fgPct":0.7009237875288684,"ppa":1.4018475750577368,"efg":0.7009237875288684,"share":0.2406892718176765},{"team":"DEN","group":"2PT: 4 to under 10 ft","fga":1338,"fgm":637,"fg3m":0,"points":1274,"fgPct":0.4760837070254111,"ppa":0.9521674140508222,"efg":0.4760837070254111,"share":0.1859366314619233},{"team":"DEN","group":"2PT: 10 to under 16 ft","fga":707,"fgm":350,"fg3m":0,"points":700,"fgPct":0.49504950495049505,"ppa":0.9900990099009901,"efg":0.49504950495049505,"share":0.09824902723735408},{"team":"DEN","group":"2PT: 16+ ft","fga":485,"fgm":208,"fg3m":0,"points":416,"fgPct":0.4288659793814433,"ppa":0.8577319587628865,"efg":0.4288659793814433,"share":0.06739855475264035},{"team":"DET","group":"Three-pointers","fga":2534,"fgm":902,"fg3m":902,"points":2706,"fgPct":0.35595895816890294,"ppa":1.0678768745067087,"efg":0.5339384372533543,"share":0.3452316076294278},{"team":"DET","group":"2PT: under 4 ft","fga":2145,"fgm":1470,"fg3m":0,"points":2940,"fgPct":0.6853146853146853,"ppa":1.3706293706293706,"efg":0.6853146853146853,"share":0.29223433242506813},{"team":"DET","group":"2PT: 4 to under 10 ft","fga":1726,"fgm":803,"fg3m":0,"points":1606,"fgPct":0.46523754345307067,"ppa":0.9304750869061413,"efg":0.46523754345307067,"share":0.235149863760218},{"team":"DET","group":"2PT: 10 to under 16 ft","fga":623,"fgm":266,"fg3m":0,"points":532,"fgPct":0.42696629213483145,"ppa":0.8539325842696629,"efg":0.42696629213483145,"share":0.08487738419618529},{"team":"DET","group":"2PT: 16+ ft","fga":312,"fgm":119,"fg3m":0,"points":238,"fgPct":0.3814102564102564,"ppa":0.7628205128205128,"efg":0.3814102564102564,"share":0.04250681198910082},{"team":"GSW","group":"Three-pointers","fga":3616,"fgm":1286,"fg3m":1286,"points":3858,"fgPct":0.35564159292035397,"ppa":1.0669247787610618,"efg":0.5334623893805309,"share":0.4967032967032967},{"team":"GSW","group":"2PT: under 4 ft","fga":1687,"fgm":1209,"fg3m":0,"points":2418,"fgPct":0.7166567871962063,"ppa":1.4333135743924126,"efg":0.7166567871962063,"share":0.23173076923076924},{"team":"GSW","group":"2PT: 4 to under 10 ft","fga":1163,"fgm":538,"fg3m":0,"points":1076,"fgPct":0.46259673258813416,"ppa":0.9251934651762683,"efg":0.46259673258813416,"share":0.15975274725274724},{"team":"GSW","group":"2PT: 10 to under 16 ft","fga":508,"fgm":209,"fg3m":0,"points":418,"fgPct":0.41141732283464566,"ppa":0.8228346456692913,"efg":0.41141732283464566,"share":0.06978021978021978},{"team":"GSW","group":"2PT: 16+ ft","fga":306,"fgm":115,"fg3m":0,"points":230,"fgPct":0.3758169934640523,"ppa":0.7516339869281046,"efg":0.3758169934640523,"share":0.042032967032967036},{"team":"HOU","group":"Three-pointers","fga":2580,"fgm":940,"fg3m":940,"points":2820,"fgPct":0.3643410852713178,"ppa":1.0930232558139534,"efg":0.5465116279069767,"share":0.35049585654123083},{"team":"HOU","group":"2PT: under 4 ft","fga":1804,"fgm":1233,"fg3m":0,"points":2466,"fgPct":0.6834811529933481,"ppa":1.3669623059866962,"efg":0.6834811529933481,"share":0.24507539736448852},{"team":"HOU","group":"2PT: 4 to under 10 ft","fga":1319,"fgm":625,"fg3m":0,"points":1250,"fgPct":0.47384382107657314,"ppa":0.9476876421531463,"efg":0.47384382107657314,"share":0.1791876103790246},{"team":"HOU","group":"2PT: 10 to under 16 ft","fga":1110,"fgm":494,"fg3m":0,"points":988,"fgPct":0.44504504504504505,"ppa":0.8900900900900901,"efg":0.44504504504504505,"share":0.15079472897704116},{"team":"HOU","group":"2PT: 16+ ft","fga":548,"fgm":231,"fg3m":0,"points":462,"fgPct":0.4215328467153285,"ppa":0.843065693430657,"efg":0.4215328467153285,"share":0.07444640673821491},{"team":"IND","group":"Three-pointers","fga":3084,"fgm":1097,"fg3m":1097,"points":3291,"fgPct":0.3557068741893645,"ppa":1.0671206225680934,"efg":0.5335603112840467,"share":0.4222343921139102},{"team":"IND","group":"2PT: under 4 ft","fga":1792,"fgm":1188,"fg3m":0,"points":2376,"fgPct":0.6629464285714286,"ppa":1.3258928571428572,"efg":0.6629464285714286,"share":0.24534501642935377},{"team":"IND","group":"2PT: 4 to under 10 ft","fga":1155,"fgm":518,"fg3m":0,"points":1036,"fgPct":0.4484848484848485,"ppa":0.896969696969697,"efg":0.4484848484848485,"share":0.15813253012048192},{"team":"IND","group":"2PT: 10 to under 16 ft","fga":776,"fgm":354,"fg3m":0,"points":708,"fgPct":0.45618556701030927,"ppa":0.9123711340206185,"efg":0.45618556701030927,"share":0.10624315443592552},{"team":"IND","group":"2PT: 16+ ft","fga":497,"fgm":189,"fg3m":0,"points":378,"fgPct":0.38028169014084506,"ppa":0.7605633802816901,"efg":0.38028169014084506,"share":0.06804490690032859},{"team":"LAC","group":"Three-pointers","fga":2772,"fgm":1019,"fg3m":1019,"points":3057,"fgPct":0.3676046176046176,"ppa":1.102813852813853,"efg":0.5514069264069265,"share":0.40425842205045937},{"team":"LAC","group":"2PT: under 4 ft","fga":1657,"fgm":1191,"fg3m":0,"points":2382,"fgPct":0.7187688593844297,"ppa":1.4375377187688594,"efg":0.7187688593844297,"share":0.24165086772641098},{"team":"LAC","group":"2PT: 4 to under 10 ft","fga":1318,"fgm":622,"fg3m":0,"points":1244,"fgPct":0.47192716236722304,"ppa":0.9438543247344461,"efg":0.47192716236722304,"share":0.1922123377570366},{"team":"LAC","group":"2PT: 10 to under 16 ft","fga":748,"fgm":354,"fg3m":0,"points":708,"fgPct":0.4732620320855615,"ppa":0.946524064171123,"efg":0.4732620320855615,"share":0.10908560595012397},{"team":"LAC","group":"2PT: 16+ ft","fga":362,"fgm":136,"fg3m":0,"points":272,"fgPct":0.3756906077348066,"ppa":0.7513812154696132,"efg":0.3756906077348066,"share":0.052792766515969085},{"team":"LAL","group":"Three-pointers","fga":2701,"fgm":970,"fg3m":970,"points":2910,"fgPct":0.35912624953720845,"ppa":1.0773787486116253,"efg":0.5386893743058127,"share":0.39355966778376805},{"team":"LAL","group":"2PT: under 4 ft","fga":1643,"fgm":1255,"fg3m":0,"points":2510,"fgPct":0.7638466220328667,"ppa":1.5276932440657334,"efg":0.7638466220328667,"share":0.23939967944047794},{"team":"LAL","group":"2PT: 4 to under 10 ft","fga":1212,"fgm":620,"fg3m":0,"points":1240,"fgPct":0.5115511551155115,"ppa":1.023102310231023,"efg":0.5115511551155115,"share":0.1765991548885327},{"team":"LAL","group":"2PT: 10 to under 16 ft","fga":900,"fgm":424,"fg3m":0,"points":848,"fgPct":0.4711111111111111,"ppa":0.9422222222222222,"efg":0.4711111111111111,"share":0.13113798630336587},{"team":"LAL","group":"2PT: 16+ ft","fga":407,"fgm":179,"fg3m":0,"points":358,"fgPct":0.4398034398034398,"ppa":0.8796068796068796,"efg":0.4398034398034398,"share":0.05930351158385546},{"team":"MEM","group":"Three-pointers","fga":3241,"fgm":1143,"fg3m":1143,"points":3429,"fgPct":0.3526689293427954,"ppa":1.0580067880283863,"efg":0.5290033940141932,"share":0.43614587538689276},{"team":"MEM","group":"2PT: under 4 ft","fga":1733,"fgm":1140,"fg3m":0,"points":2280,"fgPct":0.6578188113098673,"ppa":1.3156376226197346,"efg":0.6578188113098673,"share":0.23321221908222312},{"team":"MEM","group":"2PT: 4 to under 10 ft","fga":1331,"fgm":632,"fg3m":0,"points":1264,"fgPct":0.47483095416979715,"ppa":0.9496619083395943,"efg":0.47483095416979715,"share":0.1791145202529942},{"team":"MEM","group":"2PT: 10 to under 16 ft","fga":781,"fgm":348,"fg3m":0,"points":696,"fgPct":0.44558258642765686,"ppa":0.8911651728553137,"efg":0.44558258642765686,"share":0.10510025568564123},{"team":"MEM","group":"2PT: 16+ ft","fga":345,"fgm":127,"fg3m":0,"points":254,"fgPct":0.3681159420289855,"ppa":0.736231884057971,"efg":0.3681159420289855,"share":0.046427129592248685},{"team":"MIA","group":"Three-pointers","fga":3107,"fgm":1123,"fg3m":1123,"points":3369,"fgPct":0.3614419053749598,"ppa":1.0843257161248794,"efg":0.5421628580624397,"share":0.40625},{"team":"MIA","group":"2PT: under 4 ft","fga":2034,"fgm":1372,"fg3m":0,"points":2744,"fgPct":0.6745329400196657,"ppa":1.3490658800393314,"efg":0.6745329400196657,"share":0.2659518828451883},{"team":"MIA","group":"2PT: 4 to under 10 ft","fga":1562,"fgm":690,"fg3m":0,"points":1380,"fgPct":0.44174135723431496,"ppa":0.8834827144686299,"efg":0.44174135723431496,"share":0.20423640167364016},{"team":"MIA","group":"2PT: 10 to under 16 ft","fga":676,"fgm":296,"fg3m":0,"points":592,"fgPct":0.4378698224852071,"ppa":0.8757396449704142,"efg":0.4378698224852071,"share":0.08838912133891214},{"team":"MIA","group":"2PT: 16+ ft","fga":269,"fgm":101,"fg3m":0,"points":202,"fgPct":0.3754646840148699,"ppa":0.7509293680297398,"efg":0.3754646840148699,"share":0.035172594142259414},{"team":"MIL","group":"Three-pointers","fga":3205,"fgm":1240,"fg3m":1240,"points":3720,"fgPct":0.3868954758190328,"ppa":1.1606864274570983,"efg":0.5803432137285491,"share":0.45707358813462634},{"team":"MIL","group":"2PT: under 4 ft","fga":1677,"fgm":1207,"fg3m":0,"points":2414,"fgPct":0.7197376267143709,"ppa":1.4394752534287418,"efg":0.7197376267143709,"share":0.23916143753565317},{"team":"MIL","group":"2PT: 4 to under 10 ft","fga":877,"fgm":364,"fg3m":0,"points":728,"fgPct":0.4150513112884835,"ppa":0.830102622576967,"efg":0.4150513112884835,"share":0.12507130633200228},{"team":"MIL","group":"2PT: 10 to under 16 ft","fga":691,"fgm":303,"fg3m":0,"points":606,"fgPct":0.4384949348769899,"ppa":0.8769898697539797,"efg":0.4384949348769899,"share":0.09854535082715345},{"team":"MIL","group":"2PT: 16+ ft","fga":562,"fgm":231,"fg3m":0,"points":462,"fgPct":0.4110320284697509,"ppa":0.8220640569395018,"efg":0.4110320284697509,"share":0.08014831717056474},{"team":"MIN","group":"Three-pointers","fga":3049,"fgm":1128,"fg3m":1128,"points":3384,"fgPct":0.369957363069859,"ppa":1.1098720892095768,"efg":0.5549360446047884,"share":0.4199724517906336},{"team":"MIN","group":"2PT: under 4 ft","fga":2009,"fgm":1394,"fg3m":0,"points":2788,"fgPct":0.6938775510204082,"ppa":1.3877551020408163,"efg":0.6938775510204082,"share":0.2767217630853995},{"team":"MIN","group":"2PT: 4 to under 10 ft","fga":1132,"fgm":502,"fg3m":0,"points":1004,"fgPct":0.44346289752650175,"ppa":0.8869257950530035,"efg":0.44346289752650175,"share":0.15592286501377411},{"team":"MIN","group":"2PT: 10 to under 16 ft","fga":696,"fgm":325,"fg3m":0,"points":650,"fgPct":0.46695402298850575,"ppa":0.9339080459770115,"efg":0.46695402298850575,"share":0.09586776859504133},{"team":"MIN","group":"2PT: 16+ ft","fga":374,"fgm":146,"fg3m":0,"points":292,"fgPct":0.39037433155080214,"ppa":0.7807486631016043,"efg":0.39037433155080214,"share":0.051515151515151514},{"team":"NOP","group":"Three-pointers","fga":2635,"fgm":914,"fg3m":914,"points":2742,"fgPct":0.34686907020872865,"ppa":1.0406072106261859,"efg":0.5203036053130929,"share":0.3551212938005391},{"team":"NOP","group":"2PT: under 4 ft","fga":2630,"fgm":1722,"fg3m":0,"points":3444,"fgPct":0.6547528517110266,"ppa":1.3095057034220532,"efg":0.6547528517110266,"share":0.35444743935309975},{"team":"NOP","group":"2PT: 4 to under 10 ft","fga":1300,"fgm":507,"fg3m":0,"points":1014,"fgPct":0.39,"ppa":0.78,"efg":0.39,"share":0.1752021563342318},{"team":"NOP","group":"2PT: 10 to under 16 ft","fga":563,"fgm":209,"fg3m":0,"points":418,"fgPct":0.37122557726465366,"ppa":0.7424511545293073,"efg":0.37122557726465366,"share":0.07587601078167115},{"team":"NOP","group":"2PT: 16+ ft","fga":292,"fgm":103,"fg3m":0,"points":206,"fgPct":0.3527397260273973,"ppa":0.7054794520547946,"efg":0.3527397260273973,"share":0.039353099730458224},{"team":"NYK","group":"Three-pointers","fga":3133,"fgm":1168,"fg3m":1168,"points":3504,"fgPct":0.37280561761889563,"ppa":1.118416852856687,"efg":0.5592084264283435,"share":0.4275382096069869},{"team":"NYK","group":"2PT: under 4 ft","fga":1939,"fgm":1309,"fg3m":0,"points":2618,"fgPct":0.6750902527075813,"ppa":1.3501805054151625,"efg":0.6750902527075813,"share":0.26460152838427947},{"team":"NYK","group":"2PT: 4 to under 10 ft","fga":1028,"fgm":473,"fg3m":0,"points":946,"fgPct":0.4601167315175097,"ppa":0.9202334630350194,"efg":0.4601167315175097,"share":0.14028384279475983},{"team":"NYK","group":"2PT: 10 to under 16 ft","fga":820,"fgm":363,"fg3m":0,"points":726,"fgPct":0.4426829268292683,"ppa":0.8853658536585366,"efg":0.4426829268292683,"share":0.11189956331877729},{"team":"NYK","group":"2PT: 16+ ft","fga":408,"fgm":187,"fg3m":0,"points":374,"fgPct":0.4583333333333333,"ppa":0.9166666666666666,"efg":0.4583333333333333,"share":0.055676855895196505},{"team":"OKC","group":"Three-pointers","fga":3111,"fgm":1135,"fg3m":1135,"points":3405,"fgPct":0.36483445837351336,"ppa":1.09450337512054,"efg":0.54725168756027,"share":0.425756124264404},{"team":"OKC","group":"2PT: under 4 ft","fga":1894,"fgm":1331,"fg3m":0,"points":2662,"fgPct":0.7027455121436114,"ppa":1.4054910242872227,"efg":0.7027455121436114,"share":0.2592035034898043},{"team":"OKC","group":"2PT: 4 to under 10 ft","fga":1051,"fgm":442,"fg3m":0,"points":884,"fgPct":0.42055185537583256,"ppa":0.8411037107516651,"efg":0.42055185537583256,"share":0.14383467907485972},{"team":"OKC","group":"2PT: 10 to under 16 ft","fga":863,"fgm":451,"fg3m":0,"points":902,"fgPct":0.522595596755504,"ppa":1.045191193511008,"efg":0.522595596755504,"share":0.1181059258245518},{"team":"OKC","group":"2PT: 16+ ft","fga":388,"fgm":175,"fg3m":0,"points":350,"fgPct":0.45103092783505155,"ppa":0.9020618556701031,"efg":0.45103092783505155,"share":0.05309976734638018},{"team":"ORL","group":"Three-pointers","fga":2799,"fgm":961,"fg3m":961,"points":2883,"fgPct":0.34333690603787065,"ppa":1.030010718113612,"efg":0.515005359056806,"share":0.3863887355052457},{"team":"ORL","group":"2PT: under 4 ft","fga":2047,"fgm":1406,"fg3m":0,"points":2812,"fgPct":0.6868588177821202,"ppa":1.3737176355642404,"efg":0.6868588177821202,"share":0.28257868580894535},{"team":"ORL","group":"2PT: 4 to under 10 ft","fga":1337,"fgm":555,"fg3m":0,"points":1110,"fgPct":0.4151084517576664,"ppa":0.8302169035153328,"efg":0.4151084517576664,"share":0.1845665378244064},{"team":"ORL","group":"2PT: 10 to under 16 ft","fga":664,"fgm":273,"fg3m":0,"points":546,"fgPct":0.411144578313253,"ppa":0.822289156626506,"efg":0.411144578313253,"share":0.09166206515737162},{"team":"ORL","group":"2PT: 16+ ft","fga":397,"fgm":168,"fg3m":0,"points":336,"fgPct":0.42317380352644834,"ppa":0.8463476070528967,"efg":0.42317380352644834,"share":0.05480397570403092},{"team":"PHI","group":"Three-pointers","fga":2896,"fgm":1011,"fg3m":1011,"points":3033,"fgPct":0.3491022099447514,"ppa":1.0473066298342542,"efg":0.5236533149171271,"share":0.391139924365208},{"team":"PHI","group":"2PT: under 4 ft","fga":2187,"fgm":1434,"fg3m":0,"points":2868,"fgPct":0.6556927297668038,"ppa":1.3113854595336076,"efg":0.6556927297668038,"share":0.2953808752025932},{"team":"PHI","group":"2PT: 4 to under 10 ft","fga":1091,"fgm":457,"fg3m":0,"points":914,"fgPct":0.4188817598533456,"ppa":0.8377635197066912,"efg":0.4188817598533456,"share":0.14735278227984874},{"team":"PHI","group":"2PT: 10 to under 16 ft","fga":707,"fgm":290,"fg3m":0,"points":580,"fgPct":0.4101838755304102,"ppa":0.8203677510608204,"efg":0.4101838755304102,"share":0.0954889249054565},{"team":"PHI","group":"2PT: 16+ ft","fga":523,"fgm":230,"fg3m":0,"points":460,"fgPct":0.4397705544933078,"ppa":0.8795411089866156,"efg":0.4397705544933078,"share":0.07063749324689357},{"team":"PHX","group":"Three-pointers","fga":3348,"fgm":1210,"fg3m":1210,"points":3630,"fgPct":0.36140979689366787,"ppa":1.0842293906810037,"efg":0.5421146953405018,"share":0.4531059683313033},{"team":"PHX","group":"2PT: under 4 ft","fga":1613,"fgm":1088,"fg3m":0,"points":2176,"fgPct":0.6745195288282703,"ppa":1.3490390576565405,"efg":0.6745195288282703,"share":0.2182974692109893},{"team":"PHX","group":"2PT: 4 to under 10 ft","fga":1017,"fgm":443,"fg3m":0,"points":886,"fgPct":0.43559488692232057,"ppa":0.8711897738446411,"efg":0.43559488692232057,"share":0.13763702801461633},{"team":"PHX","group":"2PT: 10 to under 16 ft","fga":895,"fgm":400,"fg3m":0,"points":800,"fgPct":0.44692737430167595,"ppa":0.8938547486033519,"efg":0.44692737430167595,"share":0.12112599810529165},{"team":"PHX","group":"2PT: 16+ ft","fga":516,"fgm":221,"fg3m":0,"points":442,"fgPct":0.42829457364341084,"ppa":0.8565891472868217,"efg":0.42829457364341084,"share":0.06983353633779943},{"team":"POR","group":"Three-pointers","fga":3462,"fgm":1186,"fg3m":1186,"points":3558,"fgPct":0.34257654534950893,"ppa":1.0277296360485269,"efg":0.5138648180242634,"share":0.4685343077547706},{"team":"POR","group":"2PT: under 4 ft","fga":2143,"fgm":1463,"fg3m":0,"points":2926,"fgPct":0.6826878208119459,"ppa":1.3653756416238918,"efg":0.6826878208119459,"share":0.29002571389903914},{"team":"POR","group":"2PT: 4 to under 10 ft","fga":1087,"fgm":431,"fg3m":0,"points":862,"fgPct":0.39650413983440663,"ppa":0.7930082796688133,"efg":0.39650413983440663,"share":0.14711056976586817},{"team":"POR","group":"2PT: 10 to under 16 ft","fga":405,"fgm":153,"fg3m":0,"points":306,"fgPct":0.37777777777777777,"ppa":0.7555555555555555,"efg":0.37777777777777777,"share":0.05481120584652863},{"team":"POR","group":"2PT: 16+ ft","fga":292,"fgm":117,"fg3m":0,"points":234,"fgPct":0.4006849315068493,"ppa":0.8013698630136986,"efg":0.4006849315068493,"share":0.03951820273379348},{"team":"SAC","group":"Three-pointers","fga":2476,"fgm":843,"fg3m":843,"points":2529,"fgPct":0.3404684975767367,"ppa":1.02140549273021,"efg":0.510702746365105,"share":0.3392245513083984},{"team":"SAC","group":"2PT: 4 to under 10 ft","fga":1693,"fgm":834,"fg3m":0,"points":1668,"fgPct":0.4926166568222091,"ppa":0.9852333136444182,"efg":0.4926166568222091,"share":0.23194958213453898},{"team":"SAC","group":"2PT: under 4 ft","fga":1446,"fgm":1034,"fg3m":0,"points":2068,"fgPct":0.715076071922545,"ppa":1.43015214384509,"efg":0.715076071922545,"share":0.19810933004521167},{"team":"SAC","group":"2PT: 10 to under 16 ft","fga":1020,"fgm":430,"fg3m":0,"points":860,"fgPct":0.4215686274509804,"ppa":0.8431372549019608,"efg":0.4215686274509804,"share":0.13974517057131114},{"team":"SAC","group":"2PT: 16+ ft","fga":664,"fgm":267,"fg3m":0,"points":534,"fgPct":0.40210843373493976,"ppa":0.8042168674698795,"efg":0.40210843373493976,"share":0.0909713659405398},{"team":"SAS","group":"Three-pointers","fga":3108,"fgm":1116,"fg3m":1116,"points":3348,"fgPct":0.3590733590733591,"ppa":1.0772200772200773,"efg":0.5386100386100386,"share":0.42165242165242167},{"team":"SAS","group":"2PT: under 4 ft","fga":2189,"fgm":1507,"fg3m":0,"points":3014,"fgPct":0.6884422110552764,"ppa":1.3768844221105527,"efg":0.6884422110552764,"share":0.2969746303079636},{"team":"SAS","group":"2PT: 4 to under 10 ft","fga":1050,"fgm":487,"fg3m":0,"points":974,"fgPct":0.4638095238095238,"ppa":0.9276190476190476,"efg":0.4638095238095238,"share":0.14245014245014245},{"team":"SAS","group":"2PT: 10 to under 16 ft","fga":671,"fgm":302,"fg3m":0,"points":604,"fgPct":0.45007451564828616,"ppa":0.9001490312965723,"efg":0.45007451564828616,"share":0.0910324243657577},{"team":"SAS","group":"2PT: 16+ ft","fga":353,"fgm":150,"fg3m":0,"points":300,"fgPct":0.42492917847025496,"ppa":0.8498583569405099,"efg":0.42492917847025496,"share":0.047890381223714557},{"team":"TOR","group":"Three-pointers","fga":2633,"fgm":932,"fg3m":932,"points":2796,"fgPct":0.35396885681731866,"ppa":1.061906570451956,"efg":0.530953285225978,"share":0.36317241379310344},{"team":"TOR","group":"2PT: under 4 ft","fga":2073,"fgm":1434,"fg3m":0,"points":2868,"fgPct":0.6917510853835022,"ppa":1.3835021707670043,"efg":0.6917510853835022,"share":0.28593103448275864},{"team":"TOR","group":"2PT: 4 to under 10 ft","fga":1137,"fgm":501,"fg3m":0,"points":1002,"fgPct":0.44063324538258575,"ppa":0.8812664907651715,"efg":0.44063324538258575,"share":0.15682758620689655},{"team":"TOR","group":"2PT: 10 to under 16 ft","fga":944,"fgm":427,"fg3m":0,"points":854,"fgPct":0.4523305084745763,"ppa":0.9046610169491526,"efg":0.4523305084745763,"share":0.13020689655172413},{"team":"TOR","group":"2PT: 16+ ft","fga":463,"fgm":201,"fg3m":0,"points":402,"fgPct":0.43412526997840173,"ppa":0.8682505399568035,"efg":0.43412526997840173,"share":0.06386206896551724},{"team":"UTA","group":"Three-pointers","fga":3006,"fgm":1036,"fg3m":1036,"points":3108,"fgPct":0.34464404524284764,"ppa":1.033932135728543,"efg":0.5169660678642715,"share":0.4024635158655777},{"team":"UTA","group":"2PT: 4 to under 10 ft","fga":1696,"fgm":855,"fg3m":0,"points":1710,"fgPct":0.504127358490566,"ppa":1.008254716981132,"efg":0.504127358490566,"share":0.22707189717498996},{"team":"UTA","group":"2PT: under 4 ft","fga":1672,"fgm":1143,"fg3m":0,"points":2286,"fgPct":0.6836124401913876,"ppa":1.3672248803827751,"efg":0.6836124401913876,"share":0.22385861561119294},{"team":"UTA","group":"2PT: 10 to under 16 ft","fga":676,"fgm":292,"fg3m":0,"points":584,"fgPct":0.4319526627218935,"ppa":0.863905325443787,"efg":0.4319526627218935,"share":0.09050743071361628},{"team":"UTA","group":"2PT: 16+ ft","fga":419,"fgm":163,"fg3m":0,"points":326,"fgPct":0.38902147971360385,"ppa":0.7780429594272077,"efg":0.38902147971360385,"share":0.056098540634623106},{"team":"WAS","group":"Three-pointers","fga":2983,"fgm":1070,"fg3m":1070,"points":3210,"fgPct":0.3586992960107275,"ppa":1.0760978880321823,"efg":0.5380489440160912,"share":0.4026184370360372},{"team":"WAS","group":"2PT: under 4 ft","fga":1830,"fgm":1282,"fg3m":0,"points":2564,"fgPct":0.7005464480874317,"ppa":1.4010928961748634,"efg":0.7005464480874317,"share":0.2469968956674315},{"team":"WAS","group":"2PT: 4 to under 10 ft","fga":1270,"fgm":499,"fg3m":0,"points":998,"fgPct":0.39291338582677166,"ppa":0.7858267716535433,"efg":0.39291338582677166,"share":0.17141314617357267},{"team":"WAS","group":"2PT: 10 to under 16 ft","fga":793,"fgm":350,"fg3m":0,"points":700,"fgPct":0.44136191677175285,"ppa":0.8827238335435057,"efg":0.44136191677175285,"share":0.10703198812255366},{"team":"WAS","group":"2PT: 16+ ft","fga":533,"fgm":227,"fg3m":0,"points":454,"fgPct":0.425891181988743,"ppa":0.851782363977486,"efg":0.425891181988743,"share":0.07193953300040491}],"leagueGroups":[{"group":"Three-pointers","fga":90970,"fgm":32717,"fg3m":32717,"points":98151,"ppa":1.0789381114653183,"efg":0.5394690557326591,"fgPct":0.35964603715510607,"share":0.4150867634913465},{"group":"2PT: under 4 ft","fga":56943,"fgm":39087,"fg3m":0,"points":78174,"ppa":1.3728465307412676,"efg":0.6864232653706338,"fgPct":0.6864232653706338,"share":0.2598250585191573},{"group":"2PT: 4 to under 10 ft","fga":37555,"fgm":16884,"fg3m":0,"points":33768,"ppa":0.8991612301957129,"efg":0.44958061509785646,"fgPct":0.44958061509785646,"share":0.17135960649574053},{"group":"2PT: 10 to under 16 ft","fga":21573,"fgm":9644,"fg3m":0,"points":19288,"ppa":0.8940805636675474,"efg":0.4470402818337737,"fgPct":0.4470402818337737,"share":0.09843538253049156},{"group":"2PT: 16+ ft","fga":12118,"fgm":4895,"fg3m":0,"points":9790,"ppa":0.8078890906090114,"efg":0.4039445453045057,"fgPct":0.4039445453045057,"share":0.055293188963264114}],"zones":[{"team":"NYK","section":"Left Corner 3","attempts":493,"makes":208,"fgPct":0.42190669371196754,"points":624,"ppa":1.2657200811359026},{"team":"NYK","section":"Left Baseline Two","attempts":175,"makes":67,"fgPct":0.38285714285714284,"points":134,"ppa":0.7657142857142857},{"team":"NYK","section":"Restricted Area","attempts":2064,"makes":1369,"fgPct":0.6632751937984496,"points":2738,"ppa":1.3265503875968991},{"team":"NYK","section":"Right Baseline Two","attempts":196,"makes":96,"fgPct":0.4897959183673469,"points":192,"ppa":0.9795918367346939},{"team":"NYK","section":"Right Corner 3","attempts":499,"makes":204,"fgPct":0.4088176352705411,"points":612,"ppa":1.2264529058116231},{"team":"NYK","section":"Left Short Two","attempts":69,"makes":39,"fgPct":0.5652173913043478,"points":78,"ppa":1.1304347826086956},{"team":"NYK","section":"Paint","attempts":1291,"makes":589,"fgPct":0.4562354763749032,"points":1178,"ppa":0.9124709527498064},{"team":"NYK","section":"Right Short Two","attempts":69,"makes":29,"fgPct":0.42028985507246375,"points":58,"ppa":0.8405797101449275},{"team":"NYK","section":"Left Elbow Two","attempts":52,"makes":16,"fgPct":0.3076923076923077,"points":32,"ppa":0.6153846153846154},{"team":"NYK","section":"Center Two","attempts":236,"makes":108,"fgPct":0.4576271186440678,"points":216,"ppa":0.9152542372881356},{"team":"NYK","section":"Right Elbow Two","attempts":43,"makes":19,"fgPct":0.4418604651162791,"points":38,"ppa":0.8837209302325582},{"team":"NYK","section":"Left Wing 3","attempts":772,"makes":294,"fgPct":0.38082901554404147,"points":882,"ppa":1.1424870466321244},{"team":"NYK","section":"Center 3","attempts":660,"makes":237,"fgPct":0.35909090909090907,"points":711,"ppa":1.0772727272727274},{"team":"NYK","section":"Right Wing 3","attempts":709,"makes":225,"fgPct":0.31734837799717913,"points":675,"ppa":0.9520451339915373},{"team":"CLE","section":"Left Corner 3","attempts":400,"makes":161,"fgPct":0.4025,"points":483,"ppa":1.2075},{"team":"CLE","section":"Left Baseline Two","attempts":104,"makes":49,"fgPct":0.47115384615384615,"points":98,"ppa":0.9423076923076923},{"team":"CLE","section":"Restricted Area","attempts":2125,"makes":1442,"fgPct":0.6785882352941176,"points":2884,"ppa":1.3571764705882352},{"team":"CLE","section":"Right Baseline Two","attempts":155,"makes":77,"fgPct":0.4967741935483871,"points":154,"ppa":0.9935483870967742},{"team":"CLE","section":"Right Corner 3","attempts":394,"makes":137,"fgPct":0.3477157360406091,"points":411,"ppa":1.0431472081218274},{"team":"CLE","section":"Left Short Two","attempts":36,"makes":15,"fgPct":0.4166666666666667,"points":30,"ppa":0.8333333333333334},{"team":"CLE","section":"Paint","attempts":1440,"makes":688,"fgPct":0.4777777777777778,"points":1376,"ppa":0.9555555555555556},{"team":"CLE","section":"Right Short Two","attempts":48,"makes":24,"fgPct":0.5,"points":48,"ppa":1.0},{"team":"CLE","section":"Left Elbow Two","attempts":34,"makes":13,"fgPct":0.38235294117647056,"points":26,"ppa":0.7647058823529411},{"team":"CLE","section":"Center Two","attempts":141,"makes":58,"fgPct":0.41134751773049644,"points":116,"ppa":0.8226950354609929},{"team":"CLE","section":"Right Elbow Two","attempts":36,"makes":15,"fgPct":0.4166666666666667,"points":30,"ppa":0.8333333333333334},{"team":"CLE","section":"Left Wing 3","attempts":890,"makes":313,"fgPct":0.35168539325842696,"points":939,"ppa":1.0550561797752809},{"team":"CLE","section":"Center 3","attempts":749,"makes":269,"fgPct":0.3591455273698264,"points":807,"ppa":1.0774365821094793},{"team":"CLE","section":"Right Wing 3","attempts":828,"makes":293,"fgPct":0.3538647342995169,"points":879,"ppa":1.0615942028985508},{"team":"DEN","section":"Left Corner 3","attempts":397,"makes":182,"fgPct":0.45843828715365237,"points":546,"ppa":1.3753148614609572},{"team":"DEN","section":"Left Baseline Two","attempts":197,"makes":90,"fgPct":0.45685279187817257,"points":180,"ppa":0.9137055837563451},{"team":"DEN","section":"Restricted Area","attempts":1933,"makes":1320,"fgPct":0.6828763579927574,"points":2640,"ppa":1.3657527159855147},{"team":"DEN","section":"Right Baseline Two","attempts":143,"makes":55,"fgPct":0.38461538461538464,"points":110,"ppa":0.7692307692307693},{"team":"DEN","section":"Right Corner 3","attempts":388,"makes":164,"fgPct":0.422680412371134,"points":492,"ppa":1.268041237113402},{"team":"DEN","section":"Left Short Two","attempts":56,"makes":34,"fgPct":0.6071428571428571,"points":68,"ppa":1.2142857142857142},{"team":"DEN","section":"Paint","attempts":1492,"makes":711,"fgPct":0.4765415549597855,"points":1422,"ppa":0.953083109919571},{"team":"DEN","section":"Right Short Two","attempts":76,"makes":37,"fgPct":0.4868421052631579,"points":74,"ppa":0.9736842105263158},{"team":"DEN","section":"Left Elbow Two","attempts":69,"makes":30,"fgPct":0.43478260869565216,"points":60,"ppa":0.8695652173913043},{"team":"DEN","section":"Center Two","attempts":233,"makes":110,"fgPct":0.4721030042918455,"points":220,"ppa":0.944206008583691},{"team":"DEN","section":"Right Elbow Two","attempts":63,"makes":22,"fgPct":0.3492063492063492,"points":44,"ppa":0.6984126984126984},{"team":"DEN","section":"Left Wing 3","attempts":699,"makes":269,"fgPct":0.38483547925608014,"points":807,"ppa":1.1545064377682404},{"team":"DEN","section":"Center 3","attempts":803,"makes":292,"fgPct":0.36363636363636365,"points":876,"ppa":1.0909090909090908},{"team":"DEN","section":"Right Wing 3","attempts":644,"makes":251,"fgPct":0.38975155279503104,"points":753,"ppa":1.1692546583850931},{"team":"LAL","section":"Left Corner 3","attempts":383,"makes":134,"fgPct":0.34986945169712796,"points":402,"ppa":1.0496083550913837},{"team":"LAL","section":"Left Baseline Two","attempts":212,"makes":92,"fgPct":0.4339622641509434,"points":184,"ppa":0.8679245283018868},{"team":"LAL","section":"Restricted Area","attempts":1840,"makes":1369,"fgPct":0.7440217391304348,"points":2738,"ppa":1.4880434782608696},{"team":"LAL","section":"Right Baseline Two","attempts":119,"makes":48,"fgPct":0.40336134453781514,"points":96,"ppa":0.8067226890756303},{"team":"LAL","section":"Right Corner 3","attempts":309,"makes":107,"fgPct":0.34627831715210355,"points":321,"ppa":1.0388349514563107},{"team":"LAL","section":"Left Short Two","attempts":66,"makes":27,"fgPct":0.4090909090909091,"points":54,"ppa":0.8181818181818182},{"team":"LAL","section":"Paint","attempts":1538,"makes":759,"fgPct":0.49349804941482445,"points":1518,"ppa":0.9869960988296489},{"team":"LAL","section":"Right Short Two","attempts":56,"makes":37,"fgPct":0.6607142857142857,"points":74,"ppa":1.3214285714285714},{"team":"LAL","section":"Left Elbow Two","attempts":55,"makes":23,"fgPct":0.41818181818181815,"points":46,"ppa":0.8363636363636363},{"team":"LAL","section":"Center Two","attempts":229,"makes":106,"fgPct":0.462882096069869,"points":212,"ppa":0.925764192139738},{"team":"LAL","section":"Right Elbow Two","attempts":47,"makes":17,"fgPct":0.3617021276595745,"points":34,"ppa":0.723404255319149},{"team":"LAL","section":"Left Wing 3","attempts":809,"makes":303,"fgPct":0.37453646477132263,"points":909,"ppa":1.1236093943139678},{"team":"LAL","section":"Center 3","attempts":623,"makes":219,"fgPct":0.35152487961476725,"points":657,"ppa":1.0545746388443018},{"team":"LAL","section":"Right Wing 3","attempts":576,"makes":207,"fgPct":0.359375,"points":621,"ppa":1.078125}],"regions":[{"team":"NYK","mapped":7328,"mostPoints":"at the rim","topSquare":"(0.50, 0.25) ft","topSquarePoints":540,"parts":[{"name":"at the rim","share":0.2816593886462882,"points":2738,"ppa":1.3265503875968991},{"name":"paint","share":0.1761735807860262,"points":1178,"ppa":0.9124709527498064},{"name":"midrange","share":0.1146288209606987,"points":748,"ppa":0.8904761904761904},{"name":"corner three","share":0.13537117903930132,"points":1236,"ppa":1.2459677419354838},{"name":"above the break","share":0.2921670305676856,"points":2268,"ppa":1.059318075665577}]},{"team":"CLE","mapped":7380,"mostPoints":"at the rim","topSquare":"(0.50, 0.25) ft","topSquarePoints":570,"parts":[{"name":"at the rim","share":0.287940379403794,"points":2884,"ppa":1.3571764705882352},{"name":"paint","share":0.1951219512195122,"points":1376,"ppa":0.9555555555555556},{"name":"midrange","share":0.07520325203252033,"points":502,"ppa":0.9045045045045045},{"name":"corner three","share":0.1075880758807588,"points":894,"ppa":1.1259445843828715},{"name":"above the break","share":0.33414634146341465,"points":2625,"ppa":1.0644768856447688}]},{"team":"DEN","mapped":7193,"mostPoints":"at the rim","topSquare":"(0.50, 0.25) ft","topSquarePoints":408,"parts":[{"name":"at the rim","share":0.2687334908939247,"points":2640,"ppa":1.3657527159855147},{"name":"paint","share":0.20742388433198944,"points":1422,"ppa":0.953083109919571},{"name":"midrange","share":0.11636313082163215,"points":756,"ppa":0.9032258064516129},{"name":"corner three","share":0.1091338801612679,"points":1038,"ppa":1.3222929936305732},{"name":"above the break","share":0.29834561379118585,"points":2436,"ppa":1.135135135135135}]},{"team":"LAL","mapped":6862,"mostPoints":"at the rim","topSquare":"(0.50, 0.25) ft","topSquarePoints":332,"parts":[{"name":"at the rim","share":0.26814339842611484,"points":2738,"ppa":1.4880434782608696},{"name":"paint","share":0.22413290585835033,"points":1518,"ppa":0.9869960988296489},{"name":"midrange","share":0.11425240454677936,"points":700,"ppa":0.8928571428571429},{"name":"corner three","share":0.10084523462547362,"points":723,"ppa":1.0447976878612717},{"name":"above the break","share":0.29262605654328183,"points":2187,"ppa":1.0891434262948207}]}],"coverage":[{"team":"NYK","attempts":7328,"mapped":7328,"missingCoordinates":0,"pastHalfCourt":0,"excludedPoints":0.0},{"team":"CLE","attempts":7381,"mapped":7380,"missingCoordinates":0,"pastHalfCourt":1,"excludedPoints":0.0},{"team":"DEN","attempts":7196,"mapped":7193,"missingCoordinates":0,"pastHalfCourt":3,"excludedPoints":9.0},{"team":"LAL","attempts":6863,"mapped":6862,"missingCoordinates":0,"pastHalfCourt":1,"excludedPoints":0.0}],"court":{"baseline":-5.25,"ftLine":13.75,"threeRadius":23.75,"cornerX":22.0,"cornerY":8.9478,"rim":4.0,"frame":32.0,"polygons":{"Left Corner 3":[[-25,-5.25],[-22.0,-5.25],[-22.0,8.9478],[-25,8.9478]],"Right Corner 3":[[22.0,-5.25],[25,-5.25],[25,8.9478],[22.0,8.9478]],"Left Baseline Two":[[-22.0,-5.25],[-8,-5.25],[-8,8.9478],[-22.0,8.9478]],"Right Baseline Two":[[8,-5.25],[22.0,-5.25],[22.0,8.9478],[8,8.9478]],"Paint":[[-8,-5.25],[8,-5.25],[8,13.75],[-8,13.75]],"Restricted Area":[[-4.0,0.0],[-3.9839,0.3586],[-3.9357,0.7142],[-3.8559,1.0641],[-3.7449,1.4055],[-3.6039,1.7355],[-3.4338,2.0516],[-3.2361,2.3511],[-3.0123,2.6318],[-2.7643,2.8912],[-2.494,3.1273],[-2.2036,3.3383],[-1.8955,3.5224],[-1.5721,3.6781],[-1.2361,3.8042],[-0.8901,3.8997],[-0.5369,3.9638],[-0.1795,3.996],[0.1795,3.996],[0.5369,3.9638],[0.8901,3.8997],[1.2361,3.8042],[1.5721,3.6781],[1.8955,3.5224],[2.2036,3.3383],[2.494,3.1273],[2.7643,2.8912],[3.0123,2.6318],[3.2361,2.3511],[3.4338,2.0516],[3.6039,1.7355],[3.7449,1.4055],[3.8559,1.0641],[3.9357,0.7142],[3.9839,0.3586],[4.0,0.0],[4.0,0.0],[-4.0,0.0]],"Left Short Two":[[-8,8.9478],[-22.0,8.9478],[-22.0,8.9478],[-21.9404,9.0929],[-21.8799,9.2376],[-21.8184,9.3819],[-21.756,9.5258],[-21.6926,9.6692],[-21.6283,9.8123],[-21.563,9.9549],[-21.4968,10.0971],[-21.4296,10.2389],[-21.3615,10.3802],[-21.2925,10.521],[-21.2226,10.6614],[-21.1517,10.8013],[-21.0799,10.9408],[-21.0072,11.0798],[-20.9335,11.2183],[-20.859,11.3563],[-20.7835,11.4938],[-20.7072,11.6308],[-20.6299,11.7673],[-20.5517,11.9033],[-20.4727,12.0388],[-20.3927,12.1737],[-20.3119,12.3081],[-20.2301,12.442],[-20.1475,12.5754],[-20.064,12.7081],[-19.9797,12.8404],[-19.8944,12.972],[-19.8083,13.1032],[-19.7214,13.2337],[-19.6335,13.3636],[-19.5448,13.493],[-19.4553,13.6218],[-19.3649,13.75],[-8,13.75]],"Right Short Two":[[8,8.9478],[22.0,8.9478],[22.0,8.9478],[21.9404,9.0929],[21.8799,9.2376],[21.8184,9.3819],[21.756,9.5258],[21.6926,9.6692],[21.6283,9.8123],[21.563,9.9549],[21.4968,10.0971],[21.4296,10.2389],[21.3615,10.3802],[21.2925,10.521],[21.2226,10.6614],[21.1517,10.8013],[21.0799,10.9408],[21.0072,11.0798],[20.9335,11.2183],[20.859,11.3563],[20.7835,11.4938],[20.7072,11.6308],[20.6299,11.7673],[20.5517,11.9033],[20.4727,12.0388],[20.3927,12.1737],[20.3119,12.3081],[20.2301,12.442],[20.1475,12.5754],[20.064,12.7081],[19.9797,12.8404],[19.8944,12.972],[19.8083,13.1032],[19.7214,13.2337],[19.6335,13.3636],[19.5448,13.493],[19.4553,13.6218],[19.3649,13.75],[8,13.75]],"Left Elbow Two":[[-8,13.75],[-19.3649,13.75],[-19.3649,13.75],[-19.1224,14.0853],[-18.8741,14.4163],[-18.6201,14.7429],[-18.3604,15.0651],[-18.0952,15.3827],[-17.8244,15.6956],[-17.5483,16.0038],[-17.2668,16.3071],[-16.9801,16.6054],[-16.6882,16.8987],[-16.3913,17.1869],[-16.0894,17.4698],[-15.7826,17.7475],[-15.471,18.0198],[-15.1547,18.2866],[-14.8338,18.5478],[-14.5084,18.8034],[-14.1786,19.0533],[-13.8445,19.2975],[-13.5062,19.5357],[-13.1638,19.7681],[-12.8174,19.9944],[-12.4671,20.2147],[-12.1131,20.4288],[-11.7553,20.6367],[-11.394,20.8384],[-11.0292,21.0338],[-10.6611,21.2227],[-10.2897,21.4052],[-9.9153,21.5812],[-9.5378,21.7507],[-9.1574,21.9136],[-8.7742,22.0698],[-8.3884,22.2193],[-8.0,22.3621],[-8,13.75]],"Right Elbow Two":[[8,13.75],[19.3649,13.75],[19.3649,13.75],[19.1224,14.0853],[18.8741,14.4163],[18.6201,14.7429],[18.3604,15.0651],[18.0952,15.3827],[17.8244,15.6956],[17.5483,16.0038],[17.2668,16.3071],[16.9801,16.6054],[16.6882,16.8987],[16.3913,17.1869],[16.0894,17.4698],[15.7826,17.7475],[15.471,18.0198],[15.1547,18.2866],[14.8338,18.5478],[14.5084,18.8034],[14.1786,19.0533],[13.8445,19.2975],[13.5062,19.5357],[13.1638,19.7681],[12.8174,19.9944],[12.4671,20.2147],[12.1131,20.4288],[11.7553,20.6367],[11.394,20.8384],[11.0292,21.0338],[10.6611,21.2227],[10.2897,21.4052],[9.9153,21.5812],[9.5378,21.7507],[9.1574,21.9136],[8.7742,22.0698],[8.3884,22.2193],[8.0,22.3621],[8,13.75]],"Center Two":[[-8,13.75],[8,13.75],[8.0,22.3621],[7.5595,22.5148],[7.116,22.6589],[6.6698,22.7942],[6.2211,22.9207],[5.7699,23.0385],[5.3166,23.1473],[4.8611,23.2472],[4.4038,23.3381],[3.9449,23.4201],[3.4843,23.493],[3.0225,23.5569],[2.5595,23.6117],[2.0954,23.6574],[1.6306,23.694],[1.1652,23.7214],[0.6993,23.7397],[0.2331,23.7489],[-0.2331,23.7489],[-0.6993,23.7397],[-1.1652,23.7214],[-1.6306,23.694],[-2.0954,23.6574],[-2.5595,23.6117],[-3.0225,23.5569],[-3.4843,23.493],[-3.9449,23.4201],[-4.4038,23.3381],[-4.8611,23.2472],[-5.3166,23.1473],[-5.7699,23.0385],[-6.2211,22.9207],[-6.6698,22.7942],[-7.116,22.6589],[-7.5595,22.5148],[-8.0,22.3621]],"Left Wing 3":[[-22.0,8.9478],[-21.7925,9.4418],[-21.574,9.9311],[-21.3444,10.4152],[-21.104,10.8941],[-20.8529,11.3675],[-20.5911,11.835],[-20.3189,12.2965],[-20.0363,12.7518],[-19.7435,13.2006],[-19.4407,13.6427],[-19.128,14.0778],[-18.8055,14.5057],[-18.4735,14.9263],[-18.132,15.3392],[-17.7813,15.7444],[-17.4216,16.1416],[-17.053,16.5305],[-16.6758,16.911],[-16.29,17.2829],[-15.8959,17.646],[-15.4938,18.0001],[-15.0838,18.3451],[-14.6661,18.6807],[-14.2409,19.0068],[-13.8085,19.3233],[-13.369,19.6299],[-12.9228,19.9265],[-12.4699,20.213],[-12.0107,20.4891],[-11.5454,20.7549],[-11.0743,21.0101],[-10.5975,21.2546],[-10.1152,21.4882],[-9.6279,21.711],[-9.1356,21.9227],[-12.3091,29.5379],[-12.9723,29.2527],[-13.629,28.9526],[-14.2787,28.6377],[-14.9211,28.3083],[-15.556,27.9645],[-16.1829,27.6064],[-16.8016,27.2343],[-17.4117,26.8483],[-18.013,26.4487],[-18.6051,26.0356],[-19.1877,25.6092],[-19.7606,25.1698],[-20.3234,24.7176],[-20.8759,24.2528],[-21.4177,23.7757],[-21.9486,23.2864],[-22.4684,22.7853],[-22.9767,22.2726],[-23.4733,21.7486],[-23.958,21.2135],[-24.4305,20.6676],[-24.8906,20.1112],[-25.3379,19.5445],[-25.7724,18.9679],[-26.1938,18.3817],[-26.6018,17.7861],[-26.9963,17.1814],[-27.377,16.568],[-27.7438,15.9461],[-28.0965,15.3162],[-28.4349,14.6784],[-28.7588,14.0332],[-29.0681,13.3808],[-29.3626,12.7216],[-29.6421,12.0559]],"Center 3":[[-9.1356,21.9227],[-8.6387,22.1232],[-8.1374,22.3124],[-7.632,22.4903],[-7.1227,22.6568],[-6.6097,22.8117],[-6.0934,22.955],[-5.574,23.0867],[-5.0517,23.2065],[-4.5269,23.3146],[-3.9997,23.4108],[-3.4706,23.4951],[-2.9396,23.5674],[-2.4072,23.6277],[-1.8735,23.676],[-1.3389,23.7122],[-0.8036,23.7364],[-0.2679,23.7485],[0.2679,23.7485],[0.8036,23.7364],[1.3389,23.7122],[1.8735,23.676],[2.4072,23.6277],[2.9396,23.5674],[3.4706,23.4951],[3.9997,23.4108],[4.5269,23.3146],[5.0517,23.2065],[5.574,23.0867],[6.0934,22.955],[6.6097,22.8117],[7.1227,22.6568],[7.632,22.4903],[8.1374,22.3124],[8.6387,22.1232],[9.1356,21.9227],[12.3091,29.5379],[11.6396,29.8081],[10.9641,30.0631],[10.2831,30.3028],[9.5968,30.527],[8.9057,30.7358],[8.21,30.9289],[7.5102,31.1062],[6.8065,31.2677],[6.0994,31.4133],[5.3891,31.5429],[4.6761,31.6565],[3.9608,31.7539],[3.2434,31.8352],[2.5243,31.9003],[1.804,31.9491],[1.0828,31.9817],[0.361,31.998],[-0.361,31.998],[-1.0828,31.9817],[-1.804,31.9491],[-2.5243,31.9003],[-3.2434,31.8352],[-3.9608,31.7539],[-4.6761,31.6565],[-5.3891,31.5429],[-6.0994,31.4133],[-6.8065,31.2677],[-7.5102,31.1062],[-8.21,30.9289],[-8.9057,30.7358],[-9.5968,30.527],[-10.2831,30.3028],[-10.9641,30.0631],[-11.6396,29.8081],[-12.3091,29.5379]],"Right Wing 3":[[9.1356,21.9227],[9.6279,21.711],[10.1152,21.4882],[10.5975,21.2546],[11.0743,21.0101],[11.5454,20.7549],[12.0107,20.4891],[12.4699,20.213],[12.9228,19.9265],[13.369,19.6299],[13.8085,19.3233],[14.2409,19.0068],[14.6661,18.6807],[15.0838,18.3451],[15.4938,18.0001],[15.8959,17.646],[16.29,17.2829],[16.6758,16.911],[17.053,16.5305],[17.4216,16.1416],[17.7813,15.7444],[18.132,15.3392],[18.4735,14.9263],[18.8055,14.5057],[19.128,14.0778],[19.4407,13.6427],[19.7435,13.2006],[20.0363,12.7518],[20.3189,12.2965],[20.5911,11.835],[20.8529,11.3675],[21.104,10.8941],[21.3444,10.4152],[21.574,9.9311],[21.7925,9.4418],[22.0,8.9478],[29.6421,12.0559],[29.3626,12.7216],[29.0681,13.3808],[28.7588,14.0332],[28.4349,14.6784],[28.0965,15.3162],[27.7438,15.9461],[27.377,16.568],[26.9963,17.1814],[26.6018,17.7861],[26.1938,18.3817],[25.7724,18.9679],[25.3379,19.5445],[24.8906,20.1112],[24.4305,20.6676],[23.958,21.2135],[23.4733,21.7486],[22.9767,22.2726],[22.4684,22.7853],[21.9486,23.2864],[21.4177,23.7757],[20.8759,24.2528],[20.3234,24.7176],[19.7606,25.1698],[19.1877,25.6092],[18.6051,26.0356],[18.013,26.4487],[17.4117,26.8483],[16.8016,27.2343],[16.1829,27.6064],[15.556,27.9645],[14.9211,28.3083],[14.2787,28.6377],[13.629,28.9526],[12.9723,29.2527],[12.3091,29.5379]]},"anchors":{"Left Corner 3":[-23.6,1.0],"Right Corner 3":[23.6,1.0],"Left Baseline Two":[-15.0,2.0],"Right Baseline Two":[15.0,2.0],"Restricted Area":[0.0,2.2],"Paint":[0.0,9.0],"Left Short Two":[-14.5,11.2],"Right Short Two":[14.5,11.2],"Left Elbow Two":[-13.0,17.2],"Right Elbow Two":[13.0,17.2],"Center Two":[0.0,18.2],"Left Wing 3":[-19.5284,19.3621],"Center 3":[0.0,27.5],"Right Wing 3":[19.5284,19.3621]}}}</script>
+  <script>
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const GROUP_ORDER = [
+      "2PT: under 4 ft",
+      "2PT: 4 to under 10 ft",
+      "2PT: 10 to under 16 ft",
+      "2PT: 16+ ft",
+      "Three-pointers"
+    ];
+    const GROUP_LABEL = {
+      "2PT: under 4 ft": "Under 4 ft",
+      "2PT: 4 to under 10 ft": "4–10 ft",
+      "2PT: 10 to under 16 ft": "10–16 ft",
+      "2PT: 16+ ft": "16+ ft",
+      "Three-pointers": "Threes"
+    };
+    const GROUP_STYLE = {
+      "2PT: under 4 ft": ["#1f5c45", "#f7f4ee"],
+      "2PT: 4 to under 10 ft": ["#8fbfa8", "#1c1916"],
+      "2PT: 10 to under 16 ft": ["#e0c48a", "#1c1916"],
+      "2PT: 16+ ft": ["#e09a72", "#1c1916"],
+      "Three-pointers": ["#9a3412", "#f7f4ee"]
+    };
+    const SECTION_LIST = [
+      "Restricted Area", "Paint",
+      "Left Short Two", "Right Short Two",
+      "Left Baseline Two", "Right Baseline Two",
+      "Left Elbow Two", "Center Two", "Right Elbow Two",
+      "Left Corner 3", "Right Corner 3",
+      "Left Wing 3", "Center 3", "Right Wing 3"
+    ];
+    const SECTION_DRAW = [
+      "Left Wing 3", "Center 3", "Right Wing 3",
+      "Left Corner 3", "Right Corner 3",
+      "Left Baseline Two", "Right Baseline Two",
+      "Left Short Two", "Right Short Two",
+      "Left Elbow Two", "Right Elbow Two",
+      "Center Two", "Paint", "Restricted Area"
+    ];
+    const SECTION_SHORT = {
+      "Restricted Area": "Rim",
+      "Paint": "Paint",
+      "Left Short Two": "L Short",
+      "Right Short Two": "R Short",
+      "Left Baseline Two": "L Base",
+      "Right Baseline Two": "R Base",
+      "Left Elbow Two": "L Elbow",
+      "Center Two": "Center",
+      "Right Elbow Two": "R Elbow",
+      "Left Corner 3": "L Corner",
+      "Right Corner 3": "R Corner",
+      "Left Wing 3": "L Wing",
+      "Center 3": "Top",
+      "Right Wing 3": "R Wing"
+    };
+    const TEAM_COLOR = ["#1f5c45", "#9a3412", "#1e4d7b", "#8a6a12"];
+    const PPA_AXIS = 1.7;
+    const PRESETS = {
+      ppa: ["DEN", "BKN"],
+      threes: ["GSW", "SAC"],
+      court: ["NYK", "CLE", "DEN", "LAL"],
+      clear: []
+    };
+
+    const state = {
+      sort: "ppa",
+      dir: "desc",
+      query: "",
+      chartMetric: "ppa",
+      scale: "zoom",
+      selected: ["DEN", "BKN"],
+      showLeague: true,
+      heatSort: "three",
+      courtTeam: "DEN",
+      courtMetric: "ppa",
+      courtSort: "layout",
+      zone: "Restricted Area"
+    };
+
+    let data = null;
+    let plot = null;
+
+    function must(id) {
+      const node = document.getElementById(id);
+      if (!node) throw new Error("Missing #" + id);
+      return node;
+    }
+
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function el(tag, attrs, text) {
+      const node = document.createElement(tag);
+      if (attrs) {
+        Object.keys(attrs).forEach(function (key) {
+          const value = attrs[key];
+          if (value == null || value === false) return;
+          if (key === "class") node.className = value;
+          else node.setAttribute(key, String(value));
+        });
+      }
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function formatPpa(value) { return Number(value).toFixed(3); }
+    function formatPct(value) { return (Number(value) * 100).toFixed(1) + "%"; }
+    function formatInt(value) { return Math.round(Number(value)).toLocaleString("en-US"); }
+
+    function phrase(items) {
+      if (items.length === 0) return "No teams selected";
+      if (items.length === 1) return items[0];
+      if (items.length === 2) return items[0] + " and " + items[1];
+      return items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+    }
+
+    function teamBy(code) {
+      const row = data.teams.find(function (item) { return item.team === code; });
+      if (!row) throw new Error("Unknown team " + code);
+      return row;
+    }
+
+    function leagueBy(group) {
+      const row = data.leagueGroups.find(function (item) { return item.group === group; });
+      if (!row) throw new Error("Missing league group " + group);
+      return row;
+    }
+
+    function groupBy(code, group) {
+      const row = data.groups.find(function (item) {
+        return item.team === code && item.group === group;
+      });
+      if (!row) throw new Error("Missing " + code + " " + group);
+      return row;
+    }
+
+    function visibleTeams() {
+      const query = state.query.trim().toLowerCase();
+      const rows = data.teams.filter(function (row) {
+        if (!query) return true;
+        return row.team.toLowerCase().indexOf(query) !== -1 || row.name.toLowerCase().indexOf(query) !== -1;
+      });
+      const dir = state.dir === "asc" ? 1 : -1;
+      rows.sort(function (a, b) {
+        if (a[state.sort] < b[state.sort]) return -1 * dir;
+        if (a[state.sort] > b[state.sort]) return 1 * dir;
+        return a.team < b.team ? -1 : a.team > b.team ? 1 : 0;
+      });
+      return rows;
+    }
+
+    function metricValue(row) { return row[state.chartMetric]; }
+
+    function metricText(row) {
+      if (state.chartMetric === "ppa") return formatPpa(row.ppa);
+      if (state.chartMetric === "efg") return formatPct(row.efg);
+      return formatInt(row[state.chartMetric]);
+    }
+
+    function metricTitle() {
+      if (state.chartMetric === "ppa") return "Points per attempt";
+      if (state.chartMetric === "efg") return "Effective field-goal percentage";
+      if (state.chartMetric === "fga") return "Field goal attempts";
+      return "Points";
+    }
+
+    function ramp(t) {
+      const clamped = Math.max(0, Math.min(1, t));
+      const low = [244, 236, 224];
+      const high = [20, 74, 56];
+      const rgb = low.map(function (channel, index) {
+        return Math.round(channel + (high[index] - channel) * clamped);
+      });
+      return "rgb(" + rgb.join(",") + ")";
+    }
+
+    function heatColor(share, maxShare) {
+      return ramp(maxShare <= 0 ? 0 : share / maxShare);
+    }
+
+    function heatInk(share, maxShare) {
+      return maxShare > 0 && share / maxShare > 0.58 ? "#f7f4ee" : "#1c1916";
+    }
+
+    function writeStatus() {
+      const names = state.selected.map(function (code) { return teamBy(code).name; });
+      let text = phrase(names);
+      if (state.selected.length === 0) text = "Select up to four teams.";
+      else text = "Comparing " + text + ".";
+      if (state.showLeague && state.selected.length) text += " League included.";
+      if (state.selected.length >= 4) text += " Comparison is full.";
+      must("compare-status").textContent = text;
+    }
+
+    function renderTeamTable() {
+      const active = document.activeElement;
+      const restoreSort = active && active.dataset ? active.dataset.sort : "";
+      const rows = visibleTeams();
+      must("filter-status").textContent = "Showing " + rows.length + " of " + data.teams.length + " teams.";
+      document.querySelectorAll("#team-table [data-sort-col]").forEach(function (header) {
+        const key = header.dataset.sortCol;
+        if (key === state.sort) header.setAttribute("aria-sort", state.dir === "asc" ? "ascending" : "descending");
+        else header.setAttribute("aria-sort", "none");
+      });
+      const body = must("team-body");
+      clear(body);
+      if (!rows.length) {
+        const row = el("tr");
+        row.appendChild(el("td", { colspan: "7" }, "No teams match that search."));
+        body.appendChild(row);
+      }
+      const full = state.selected.length >= 4;
+      rows.forEach(function (row) {
+        const selected = state.selected.indexOf(row.team) !== -1;
+        const tr = el("tr");
+        if (selected) tr.setAttribute("data-selected", "true");
+        tr.appendChild(el("th", { scope: "row" }, row.team));
+        tr.lastChild.setAttribute("title", row.name);
+        tr.appendChild(el("td", { class: "num" }, String(row.games)));
+        tr.appendChild(el("td", { class: "num" }, formatInt(row.fga)));
+        tr.appendChild(el("td", { class: "num" }, formatInt(row.points)));
+        tr.appendChild(el("td", { class: "num" }, formatPpa(row.ppa)));
+        tr.appendChild(el("td", { class: "num" }, formatPct(row.efg)));
+        const cell = el("td");
+        const button = el("button", {
+          type: "button",
+          "data-pick": row.team,
+          "aria-pressed": selected ? "true" : "false"
+        }, selected ? "Remove" : "Compare");
+        button.setAttribute("aria-label", (selected ? "Remove " : "Compare ") + row.name);
+        if (full && !selected) button.disabled = true;
+        cell.appendChild(button);
+        tr.appendChild(cell);
+        body.appendChild(tr);
+      });
+      if (restoreSort) {
+        const next = document.querySelector('#team-table [data-sort="' + restoreSort + '"]');
+        if (next) next.focus();
+      }
+      writeStatus();
+    }
+
+    function renderTeamChart() {
+      const host = must("team-chart");
+      clear(host);
+      must("chart-title").textContent = metricTitle();
+      const rows = visibleTeams();
+      const note = must("scale-note");
+      if (!rows.length) {
+        note.textContent = "No teams match that search.";
+        return;
+      }
+      const values = rows.map(metricValue);
+      let low;
+      let high;
+      if (state.scale === "zero") {
+        low = 0;
+        high = Math.max.apply(null, values) * 1.04;
+      } else {
+        const min = Math.min.apply(null, values);
+        const max = Math.max.apply(null, values);
+        const pad = Math.max((max - min) * 0.12, Math.abs(max) * 0.002);
+        low = min - pad;
+        high = max + pad;
+      }
+      if (!(high > low)) high = low + 1;
+      const lowLabel = state.chartMetric === "efg" || state.chartMetric === "ppa" ? (state.chartMetric === "efg" ? formatPct(low) : formatPpa(low)) : formatInt(low);
+      const highLabel = state.chartMetric === "efg" || state.chartMetric === "ppa" ? (state.chartMetric === "efg" ? formatPct(high) : formatPpa(high)) : formatInt(high);
+      note.textContent = state.scale === "zero"
+        ? "Axis starts at zero and ends at " + highLabel + "."
+        : "Axis runs from " + lowLabel + " to " + highLabel + ", around the observed range.";
+      rows.forEach(function (row) {
+        const line = el("div", { class: "chart-row" });
+        if (state.selected.indexOf(row.team) !== -1) line.setAttribute("data-selected", "true");
+        line.appendChild(el("span", null, row.team));
+        const track = el("span", { class: "track" });
+        const width = Math.max(0, Math.min(100, ((metricValue(row) - low) / (high - low)) * 100));
+        const fill = el("span", { class: "fill" });
+        fill.style.width = width + "%";
+        track.appendChild(fill);
+        line.appendChild(track);
+        line.appendChild(el("span", { class: "num" }, metricText(row)));
+        host.appendChild(line);
+      });
+    }
+
+    function selectionSeries() {
+      const series = state.selected.map(function (code, index) {
+        return { code: code, label: code, color: TEAM_COLOR[index], kind: "team" };
+      });
+      if (state.showLeague) series.push({ code: "LG", label: "League", color: "#5c564c", kind: "league" });
+      return series;
+    }
+
+    function seriesGroup(entry, group) {
+      return entry.kind === "league" ? leagueBy(group) : groupBy(entry.code, group);
+    }
+
+    function renderMix() {
+      const chips = must("chips");
+      clear(chips);
+      state.selected.forEach(function (code, index) {
+        const button = el("button", { type: "button", class: "chip", "data-remove": code });
+        const swatch = el("span", { class: "swatch", "aria-hidden": "true" });
+        swatch.style.background = TEAM_COLOR[index];
+        button.appendChild(swatch);
+        button.appendChild(document.createTextNode(code));
+        button.setAttribute("aria-label", "Remove " + teamBy(code).name);
+        chips.appendChild(button);
+      });
+      const legend = must("stack-legend");
+      clear(legend);
+      GROUP_ORDER.forEach(function (group) {
+        const item = el("li");
+        const swatch = el("span", { class: "swatch" });
+        swatch.style.background = GROUP_STYLE[group][0];
+        item.appendChild(swatch);
+        item.appendChild(document.createTextNode(GROUP_LABEL[group]));
+        legend.appendChild(item);
+      });
+      const stacks = must("stack-chart");
+      const bars = must("ppa-chart");
+      clear(stacks);
+      clear(bars);
+      const series = selectionSeries();
+      series.forEach(function (entry) {
+        const row = el("div", { class: "mix-row" });
+        row.appendChild(el("span", null, entry.label));
+        const stack = el("div", { class: "stack" });
+        GROUP_ORDER.forEach(function (group) {
+          const stats = seriesGroup(entry, group);
+          const piece = el("span", null, stats.share >= 0.12 ? formatPct(stats.share) : "");
+          piece.style.width = (stats.share * 100) + "%";
+          piece.style.background = GROUP_STYLE[group][0];
+          piece.style.color = GROUP_STYLE[group][1];
+          piece.title = entry.label + " " + GROUP_LABEL[group] + ": " + formatPct(stats.share) + ", " + formatPpa(stats.ppa) + " PPA, n=" + formatInt(stats.fga);
+          stack.appendChild(piece);
+        });
+        row.appendChild(stack);
+        stacks.appendChild(row);
+      });
+      GROUP_ORDER.forEach(function (group) {
+        const block = el("div", { class: "ppa-block" });
+        block.appendChild(el("h3", null, GROUP_LABEL[group]));
+        series.forEach(function (entry) {
+          const stats = seriesGroup(entry, group);
+          const row = el("div", { class: "ppa-row" });
+          row.appendChild(el("span", null, entry.label));
+          const track = el("span", { class: "track" });
+          const fill = el("span", { class: "fill" });
+          fill.style.width = Math.max(0, Math.min(100, (stats.ppa / PPA_AXIS) * 100)) + "%";
+          fill.style.background = entry.color;
+          track.appendChild(fill);
+          row.appendChild(track);
+          row.appendChild(el("span", { class: "num" }, formatPpa(stats.ppa) + " · n=" + formatInt(stats.fga)));
+          block.appendChild(row);
+        });
+        bars.appendChild(block);
+      });
+      const body = must("mix-body");
+      clear(body);
+      if (!series.length) {
+        const row = el("tr");
+        row.appendChild(el("td", { colspan: "6" }, "Select a team to compare its shot mix."));
+        body.appendChild(row);
+        writeStatus();
+        return;
+      }
+      series.forEach(function (entry) {
+        const row = el("tr");
+        row.appendChild(el("th", { scope: "row" }, entry.kind === "league" ? "League" : teamBy(entry.code).name));
+        GROUP_ORDER.forEach(function (group) {
+          const stats = seriesGroup(entry, group);
+          row.appendChild(el("td", { class: "num" }, formatPct(stats.share) + " · " + formatPpa(stats.ppa)));
+        });
+        body.appendChild(row);
+      });
+      writeStatus();
+    }
+
+    function heatTeams() {
+      const rows = data.teams.slice();
+      if (state.heatSort === "ppa") {
+        rows.sort(function (a, b) { return b.ppa - a.ppa || (a.team < b.team ? -1 : 1); });
+      } else {
+        rows.sort(function (a, b) {
+          return groupBy(b.team, "Three-pointers").share - groupBy(a.team, "Three-pointers").share || (a.team < b.team ? -1 : 1);
+        });
+      }
+      return rows;
+    }
+
+    function renderHeatmap() {
+      const active = document.activeElement;
+      const restoreTeam = active && active.dataset ? active.dataset.heatTeam || "" : "";
+      const restoreCell = active && active.dataset ? active.dataset.heatCell || "" : "";
+      const host = must("heat");
+      clear(host);
+      const shares = data.groups.map(function (row) { return row.share; }).concat(data.leagueGroups.map(function (row) { return row.share; }));
+      const maxShare = Math.max.apply(null, shares);
+      host.appendChild(el("div", { class: "heat-head" }, "Team"));
+      GROUP_ORDER.forEach(function (group) {
+        host.appendChild(el("div", { class: "heat-head" }, GROUP_LABEL[group]));
+      });
+      function addCells(label, lookup, selectable) {
+        if (selectable) {
+          const button = el("button", {
+            type: "button",
+            class: "heat-team",
+            "data-heat-team": label,
+            "aria-pressed": state.selected.indexOf(label) !== -1 ? "true" : "false"
+          }, label);
+          button.setAttribute("aria-label", (state.selected.indexOf(label) !== -1 ? "Remove " : "Compare ") + teamBy(label).name);
+          if (state.selected.length >= 4 && state.selected.indexOf(label) === -1) button.disabled = true;
+          host.appendChild(button);
+        } else {
+          host.appendChild(el("div", { class: "league-label" }, label));
+        }
+        GROUP_ORDER.forEach(function (group) {
+          const stats = lookup(group);
+          const text = formatPct(stats.share);
+          const button = el("button", {
+            type: "button",
+            "data-heat-cell": (selectable ? label : "LG") + "|" + group
+          }, text);
+          button.style.background = heatColor(stats.share, maxShare);
+          button.style.color = heatInk(stats.share, maxShare);
+          const who = selectable ? teamBy(label).name : "League";
+          button.setAttribute("aria-label", who + " " + GROUP_LABEL[group] + ": " + text + " of attempts, " + formatPpa(stats.ppa) + " points per attempt, " + formatInt(stats.fga) + " attempts");
+          host.appendChild(button);
+        });
+      }
+      addCells("Lg", leagueBy, false);
+      heatTeams().forEach(function (row) {
+        addCells(row.team, function (group) { return groupBy(row.team, group); }, true);
+      });
+      const detail = must("heat-detail");
+      if (!detail.textContent) detail.textContent = "Darker cells are a larger share of that team’s attempts. The top of the scale is " + formatPct(maxShare) + ".";
+      if (restoreTeam) {
+        const next = Array.prototype.find.call(document.querySelectorAll("[data-heat-team]"), function (node) {
+          return node.dataset.heatTeam === restoreTeam;
+        });
+        if (next) next.focus();
+      } else if (restoreCell) {
+        const next = Array.prototype.find.call(document.querySelectorAll("[data-heat-cell]"), function (node) {
+          return node.dataset.heatCell === restoreCell;
+        });
+        if (next) next.focus();
+      }
+    }
+
+    function toSvg(x, y) {
+      return [(x - plot.x0) * plot.scale, (y - plot.y0) * plot.scale];
+    }
+
+    function pathD(points, closePath) {
+      let d = "";
+      points.forEach(function (point, index) {
+        const mapped = toSvg(point[0], point[1]);
+        d += (index === 0 ? "M" : "L") + mapped[0].toFixed(2) + " " + mapped[1].toFixed(2) + " ";
+      });
+      if (closePath) d += "Z";
+      return d;
+    }
+
+    function courtArc(radius, startDeg, endDeg, n) {
+      const points = [];
+      for (let i = 0; i < n; i += 1) {
+        const angle = (startDeg + ((endDeg - startDeg) * i) / (n - 1)) * Math.PI / 180;
+        points.push([radius * Math.sin(angle), radius * Math.cos(angle)]);
+      }
+      return points;
+    }
+
+    function circlePoints(cx, cy, radius, start, end, n) {
+      const points = [];
+      for (let i = 0; i < n; i += 1) {
+        const angle = start + ((end - start) * i) / (n - 1);
+        points.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+      }
+      return points;
+    }
+
+    function addLine(parent, points, className, closePath) {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", pathD(points, closePath));
+      path.setAttribute("class", className);
+      parent.appendChild(path);
+    }
+
+    function zoneColor(zone) {
+      if (state.courtMetric === "fg") return ramp((zone.fgPct - 0.3) / 0.45);
+      return ramp((zone.ppa - 0.6) / 0.95);
+    }
+
+    function zoneLabel(zone) {
+      return state.courtMetric === "fg" ? formatPct(zone.fgPct) : formatPpa(zone.ppa);
+    }
+
+    function sectionBox(points) {
+      const mapped = points.map(function (point) { return toSvg(point[0], point[1]); });
+      const xs = mapped.map(function (point) { return point[0]; });
+      const ys = mapped.map(function (point) { return point[1]; });
+      return {
+        w: Math.max.apply(null, xs) - Math.min.apply(null, xs),
+        h: Math.max.apply(null, ys) - Math.min.apply(null, ys)
+      };
+    }
+
+    function renderCourt() {
+      const svg = must("court");
+      clear(svg);
+      svg.setAttribute("viewBox", "0 0 " + plot.width.toFixed(2) + " " + plot.height.toFixed(2));
+      const court = data.court;
+      const zones = data.zones.filter(function (row) { return row.team === state.courtTeam; });
+      const bySection = {};
+      zones.forEach(function (row) { bySection[row.section] = row; });
+      SECTION_DRAW.forEach(function (name) {
+        const points = court.polygons[name];
+        const zone = bySection[name];
+        if (!points || !zone) throw new Error("Missing court section " + name);
+        const group = document.createElementNS(SVG_NS, "g");
+        group.setAttribute("class", "zone" + (name === state.zone ? " is-active" : ""));
+        group.setAttribute("data-section", name);
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", pathD(points, true));
+        path.setAttribute("fill", zoneColor(zone));
+        group.appendChild(path);
+        const box = sectionBox(points);
+        const anchor = court.anchors[name];
+        if (anchor && box.w > 52 && box.h > 36) {
+          const mapped = toSvg(anchor[0], anchor[1]);
+          const text = document.createElementNS(SVG_NS, "text");
+          text.setAttribute("x", mapped[0].toFixed(2));
+          text.setAttribute("y", mapped[1].toFixed(2));
+          if (box.w > 78 && box.h > 58) {
+            const nameLine = document.createElementNS(SVG_NS, "tspan");
+            nameLine.setAttribute("x", mapped[0].toFixed(2));
+            nameLine.setAttribute("dy", "-0.45em");
+            nameLine.textContent = SECTION_SHORT[name];
+            const valueLine = document.createElementNS(SVG_NS, "tspan");
+            valueLine.setAttribute("x", mapped[0].toFixed(2));
+            valueLine.setAttribute("dy", "1.2em");
+            valueLine.textContent = zoneLabel(zone);
+            text.appendChild(nameLine);
+            text.appendChild(valueLine);
+          } else {
+            text.textContent = zoneLabel(zone);
+          }
+          group.appendChild(text);
+        }
+        svg.appendChild(group);
+      });
+      const lines = document.createElementNS(SVG_NS, "g");
+      addLine(lines, [[-25, court.baseline], [25, court.baseline], [25, court.frame], [-25, court.frame]], "court-lines", true);
+      addLine(lines, [[-8, court.baseline], [8, court.baseline], [8, court.ftLine], [-8, court.ftLine]], "court-lines", true);
+      addLine(lines, courtArc(court.rim, -90, 90, 28), "court-lines", false);
+      addLine(lines, [[court.cornerX, court.baseline], [court.cornerX, court.cornerY]], "court-lines", false);
+      addLine(lines, [[-court.cornerX, court.baseline], [-court.cornerX, court.cornerY]], "court-lines", false);
+      const cornerDeg = Math.atan2(court.cornerX, court.cornerY) * 180 / Math.PI;
+      addLine(lines, courtArc(court.threeRadius, -cornerDeg, cornerDeg, 56), "court-lines", false);
+      addLine(lines, circlePoints(0, court.ftLine, 6, 0, Math.PI, 24), "court-lines", false);
+      addLine(lines, circlePoints(0, court.ftLine, 6, Math.PI, Math.PI * 2, 24), "court-lines dashed", false);
+      addLine(lines, circlePoints(0, 0, 0.75, 0, Math.PI * 2, 20), "court-lines", true);
+      addLine(lines, [[-3, -1.25], [3, -1.25]], "court-lines", false);
+      svg.appendChild(lines);
+
+      document.querySelectorAll("#court-teams [data-court-team]").forEach(function (button) {
+        button.setAttribute("aria-pressed", button.dataset.courtTeam === state.courtTeam ? "true" : "false");
+      });
+      const low = state.courtMetric === "fg" ? "30% FG" : "0.600 PPA";
+      const high = state.courtMetric === "fg" ? "75% FG" : "1.550 PPA";
+      must("scale-low").textContent = low;
+      must("scale-high").textContent = high;
+
+      const ordered = zones.slice();
+      if (state.courtSort === "ppa") ordered.sort(function (a, b) { return b.ppa - a.ppa; });
+      else if (state.courtSort === "attempts") ordered.sort(function (a, b) { return b.attempts - a.attempts; });
+      else ordered.sort(function (a, b) { return SECTION_LIST.indexOf(a.section) - SECTION_LIST.indexOf(b.section); });
+      const body = must("court-body");
+      clear(body);
+      ordered.forEach(function (zone) {
+        const tr = el("tr");
+        if (zone.section === state.zone) tr.className = "is-active";
+        const nameCell = el("td");
+        const button = el("button", {
+          type: "button",
+          "data-section": zone.section,
+          "aria-pressed": zone.section === state.zone ? "true" : "false"
+        }, zone.section);
+        nameCell.appendChild(button);
+        tr.appendChild(nameCell);
+        tr.appendChild(el("td", { class: "num" }, formatInt(zone.attempts) + (zone.attempts < 100 ? " · small" : "")));
+        tr.appendChild(el("td", { class: "num" }, formatInt(zone.makes)));
+        tr.appendChild(el("td", { class: "num" }, formatPct(zone.fgPct)));
+        tr.appendChild(el("td", { class: "num" }, formatInt(zone.points)));
+        tr.appendChild(el("td", { class: "num" }, formatPpa(zone.ppa)));
+        body.appendChild(tr);
+      });
+      const coverage = data.coverage.find(function (row) { return row.team === state.courtTeam; });
+      const name = teamBy(state.courtTeam).name;
+      if (!coverage) must("coverage-note").textContent = "";
+      else if (coverage.pastHalfCourt === 0 && coverage.missingCoordinates === 0) {
+        must("coverage-note").textContent = name + ": all " + formatInt(coverage.attempts) + " attempts are drawn.";
+      } else {
+        const bits = [];
+        if (coverage.pastHalfCourt) bits.push(formatInt(coverage.pastHalfCourt) + " past half court");
+        if (coverage.missingCoordinates) bits.push(formatInt(coverage.missingCoordinates) + " missing coordinates");
+        must("coverage-note").textContent = name + ": " + bits.join(" and ") + " left off the drawing (" + formatInt(coverage.excludedPoints) + " points).";
+      }
+      setZone(state.zone, false);
+    }
+
+    function setZone(section, scroll) {
+      state.zone = section;
+      document.querySelectorAll("#court [data-section]").forEach(function (node) {
+        node.classList.toggle("is-active", node.dataset.section === section);
+      });
+      document.querySelectorAll("#court-list tbody tr").forEach(function (row) {
+        const button = row.querySelector("[data-section]");
+        const on = button && button.dataset.section === section;
+        row.classList.toggle("is-active", Boolean(on));
+        if (button) button.setAttribute("aria-pressed", on ? "true" : "false");
+        if (on && scroll && button) button.scrollIntoView({ block: "nearest" });
+      });
+      const zone = data.zones.find(function (row) {
+        return row.team === state.courtTeam && row.section === section;
+      });
+      const detail = must("zone-detail");
+      clear(detail);
+      if (!zone) return;
+      detail.appendChild(el("p", { class: "eyebrow" }, teamBy(state.courtTeam).name));
+      detail.appendChild(el("h3", null, zone.section));
+      detail.appendChild(el("p", { class: "big" }, state.courtMetric === "fg" ? formatPct(zone.fgPct) : formatPpa(zone.ppa)));
+      detail.appendChild(el("p", null, formatInt(zone.makes) + " makes on " + formatInt(zone.attempts) + " attempts (" + formatPct(zone.fgPct) + " FG)."));
+      detail.appendChild(el("p", null, formatInt(zone.points) + " points, " + formatPpa(zone.ppa) + " per attempt."));
+      if (zone.attempts < 100) {
+        detail.appendChild(el("p", { class: "small-sample" }, "Small sample. Read the rate next to the attempt count."));
+      }
+    }
+
+    function renderRegions() {
+      const head = must("region-head");
+      const body = must("region-body");
+      clear(head);
+      clear(body);
+      const headRow = el("tr");
+      headRow.appendChild(el("th", { scope: "col" }, "Region"));
+      data.regions.forEach(function (region) {
+        headRow.appendChild(el("th", { scope: "col" }, region.team));
+      });
+      head.appendChild(headRow);
+      const partNames = data.regions[0].parts.map(function (part) { return part.name; });
+      partNames.forEach(function (name) {
+        const shares = data.regions.map(function (region) {
+          return region.parts.find(function (part) { return part.name === name; }).share;
+        });
+        const best = Math.max.apply(null, shares);
+        const row = el("tr");
+        row.appendChild(el("th", { scope: "row" }, name));
+        data.regions.forEach(function (region) {
+          const part = region.parts.find(function (item) { return item.name === name; });
+          let text = formatPct(part.share) + " · " + formatPpa(part.ppa);
+          if (part.share === best) text += " · highest share";
+          row.appendChild(el("td", { class: "num" }, text));
+        });
+        body.appendChild(row);
+      });
+    }
+
+    function syncPicks() {
+      const full = state.selected.length >= 4;
+      document.querySelectorAll("[data-pick]").forEach(function (button) {
+        const on = state.selected.indexOf(button.dataset.pick) !== -1;
+        button.setAttribute("aria-pressed", on ? "true" : "false");
+        button.textContent = on ? "Remove" : "Compare";
+        button.setAttribute("aria-label", (on ? "Remove " : "Compare ") + teamBy(button.dataset.pick).name);
+        button.disabled = full && !on;
+        const row = button.closest("tr");
+        if (row) {
+          if (on) row.setAttribute("data-selected", "true");
+          else row.removeAttribute("data-selected");
+        }
+      });
+    }
+
+    function toggleTeam(code) {
+      const index = state.selected.indexOf(code);
+      if (index >= 0) state.selected.splice(index, 1);
+      else if (state.selected.length >= 4) {
+        must("compare-status").textContent = "Comparison holds four teams. Remove one to add another.";
+        return;
+      } else state.selected.push(code);
+      syncPicks();
+      renderTeamChart();
+      renderMix();
+      renderHeatmap();
+    }
+
+    function applyPreset(name) {
+      state.selected = PRESETS[name].slice();
+      syncPicks();
+      renderTeamChart();
+      renderMix();
+      renderHeatmap();
+    }
+
+    function onSort(key) {
+      if (state.sort === key) state.dir = state.dir === "asc" ? "desc" : "asc";
+      else {
+        state.sort = key;
+        state.dir = key === "team" ? "asc" : "desc";
+      }
+      renderTeamTable();
+      renderTeamChart();
+    }
+
+    function bind() {
+      must("team-search").addEventListener("input", function (event) {
+        state.query = event.target.value;
+        renderTeamTable();
+        renderTeamChart();
+      });
+      must("team-table").addEventListener("click", function (event) {
+        const sort = event.target.closest("[data-sort]");
+        if (sort) {
+          onSort(sort.dataset.sort);
+          return;
+        }
+        const pick = event.target.closest("[data-pick]");
+        if (pick && !pick.disabled) toggleTeam(pick.dataset.pick);
+      });
+      must("metric-controls").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-metric]");
+        if (!button) return;
+        state.chartMetric = button.dataset.metric;
+        document.querySelectorAll("[data-metric]").forEach(function (item) {
+          item.setAttribute("aria-pressed", item === button ? "true" : "false");
+        });
+        renderTeamChart();
+      });
+      must("scale-controls").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-scale]");
+        if (!button) return;
+        state.scale = button.dataset.scale;
+        document.querySelectorAll("[data-scale]").forEach(function (item) {
+          item.setAttribute("aria-pressed", item === button ? "true" : "false");
+        });
+        renderTeamChart();
+      });
+      must("presets").addEventListener("click", function (event) {
+        const preset = event.target.closest("[data-preset]");
+        if (preset) {
+          applyPreset(preset.dataset.preset);
+          return;
+        }
+        if (event.target.closest("#league-toggle")) {
+          state.showLeague = !state.showLeague;
+          must("league-toggle").setAttribute("aria-pressed", state.showLeague ? "true" : "false");
+          renderMix();
+        }
+      });
+      must("chips").addEventListener("click", function (event) {
+        const chip = event.target.closest("[data-remove]");
+        if (chip) toggleTeam(chip.dataset.remove);
+      });
+      must("heat-sort").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-heat-sort]");
+        if (!button) return;
+        state.heatSort = button.dataset.heatSort;
+        document.querySelectorAll("[data-heat-sort]").forEach(function (item) {
+          item.setAttribute("aria-pressed", item === button ? "true" : "false");
+        });
+        renderHeatmap();
+      });
+      must("heat").addEventListener("click", function (event) {
+        const team = event.target.closest("[data-heat-team]");
+        if (team && !team.disabled) toggleTeam(team.dataset.heatTeam);
+      });
+      must("heat").addEventListener("focusin", function (event) {
+        const cell = event.target.closest("[data-heat-cell]");
+        if (!cell) return;
+        must("heat-detail").textContent = cell.getAttribute("aria-label");
+      });
+      must("court-teams").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-court-team]");
+        if (!button) return;
+        state.courtTeam = button.dataset.courtTeam;
+        renderCourt();
+      });
+      must("court-metrics").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-court-metric]");
+        if (!button) return;
+        state.courtMetric = button.dataset.courtMetric;
+        document.querySelectorAll("[data-court-metric]").forEach(function (item) {
+          item.setAttribute("aria-pressed", item === button ? "true" : "false");
+        });
+        renderCourt();
+      });
+      must("court-sort").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-court-sort]");
+        if (!button) return;
+        state.courtSort = button.dataset.courtSort;
+        document.querySelectorAll("[data-court-sort]").forEach(function (item) {
+          item.setAttribute("aria-pressed", item === button ? "true" : "false");
+        });
+        renderCourt();
+      });
+      must("court").addEventListener("click", function (event) {
+        const zone = event.target.closest("[data-section]");
+        if (zone) setZone(zone.dataset.section, true);
+      });
+      must("court-list").addEventListener("click", function (event) {
+        const zone = event.target.closest("[data-section]");
+        if (zone) setZone(zone.dataset.section, false);
+      });
+    }
+
+    function init() {
+      data = JSON.parse(must("shot-data").textContent);
+      if (!data || !data.teams || data.teams.length !== 30) throw new Error("Embedded shot tables are missing.");
+      const groupNames = data.leagueGroups.map(function (row) { return row.group; }).sort().join("|");
+      if (groupNames !== GROUP_ORDER.slice().sort().join("|")) throw new Error("Unexpected shot groups.");
+      plot = {
+        x0: -26.5,
+        y0: data.court.baseline - 2,
+        scale: 13
+      };
+      plot.x1 = 26.5;
+      plot.y1 = data.court.frame + 1.4;
+      plot.width = (plot.x1 - plot.x0) * plot.scale;
+      plot.height = (plot.y1 - plot.y0) * plot.scale;
+      bind();
+      renderTeamTable();
+      renderTeamChart();
+      renderMix();
+      renderHeatmap();
+      renderCourt();
+      renderRegions();
+    }
+
+    try {
+      init();
+    } catch (err) {
+      const banner = document.getElementById("load-error");
+      if (banner) {
+        banner.hidden = false;
+        banner.textContent = "The charts could not be drawn from the embedded tables.";
+      }
+      console.error(err);
+    }
+  </script>
+</body>
+</html>

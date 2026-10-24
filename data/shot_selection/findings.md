@@ -1,0 +1,41 @@
+### Results from the scoped play-by-play data
+- Selected 219,159 field goal attempts from 621,881 in-scope actions.
+- Shot-profile season: **2025-26**.
+- Heave rows left out: 1,093. Free-throw rows left out: 57,768.
+- **DEN**: 82 games, 7,196 attempts, 1.154 points per attempt, 57.7% eFG.
+- **LAL**: 82 games, 6,863 attempts, 1.146 points per attempt, 57.3% eFG.
+- **MIL**: 82 games, 7,012 attempts, 1.131 points per attempt, 56.5% eFG.
+- **OKC**: 82 games, 7,307 attempts, 1.123 points per attempt, 56.1% eFG.
+- **CLE**: 82 games, 7,381 attempts, 1.122 points per attempt, 56.1% eFG.
+- **MIN**: 82 games, 7,260 attempts, 1.118 points per attempt, 55.9% eFG.
+- **SAS**: 82 games, 7,371 attempts, 1.118 points per attempt, 55.9% eFG.
+- **LAC**: 82 games, 6,857 attempts, 1.118 points per attempt, 55.9% eFG.
+- **NYK**: 82 games, 7,328 attempts, 1.115 points per attempt, 55.7% eFG.
+- **ATL**: 82 games, 7,541 attempts, 1.107 points per attempt, 55.4% eFG.
+- **BOS**: 82 games, 7,398 attempts, 1.106 points per attempt, 55.3% eFG.
+- **CHA**: 82 games, 7,292 attempts, 1.105 points per attempt, 55.2% eFG.
+- **GSW**: 82 games, 7,280 attempts, 1.099 points per attempt, 54.9% eFG.
+- **CHI**: 82 games, 7,417 attempts, 1.095 points per attempt, 54.7% eFG.
+- **DET**: 82 games, 7,340 attempts, 1.093 points per attempt, 54.6% eFG.
+- **TOR**: 82 games, 7,250 attempts, 1.093 points per attempt, 54.6% eFG.
+- **HOU**: 82 games, 7,361 attempts, 1.085 points per attempt, 54.2% eFG.
+- **MIA**: 82 games, 7,648 attempts, 1.084 points per attempt, 54.2% eFG.
+- **PHX**: 82 games, 7,389 attempts, 1.074 points per attempt, 53.7% eFG.
+- **UTA**: 82 games, 7,469 attempts, 1.073 points per attempt, 53.6% eFG.
+- **WAS**: 82 games, 7,409 attempts, 1.070 points per attempt, 53.5% eFG.
+- **POR**: 82 games, 7,389 attempts, 1.067 points per attempt, 53.4% eFG.
+- **IND**: 82 games, 7,304 attempts, 1.066 points per attempt, 53.3% eFG.
+- **MEM**: 82 games, 7,431 attempts, 1.066 points per attempt, 53.3% eFG.
+- **ORL**: 82 games, 7,244 attempts, 1.061 points per attempt, 53.1% eFG.
+- **PHI**: 82 games, 7,404 attempts, 1.061 points per attempt, 53.0% eFG.
+- **NOP**: 82 games, 7,420 attempts, 1.054 points per attempt, 52.7% eFG.
+- **DAL**: 82 games, 7,366 attempts, 1.054 points per attempt, 52.7% eFG.
+- **SAC**: 82 games, 7,299 attempts, 1.049 points per attempt, 52.5% eFG.
+- **BKN**: 82 games, 6,933 attempts, 1.041 points per attempt, 52.0% eFG.
+- Observed PPA range: 0.113 (DEN 1.154 to BKN 1.041).
+- Highest league PPA is **2PT: under 4 ft**: 1.373 on 56,943 attempts (26.0% of attempts).
+- Most points came from **Three-pointers**: 98,151 points on 90,970 attempts (1.079 PPA).
+- Three-point share ranges from 33.9% (SAC, n=2,476) to 49.7% (GSW, n=3,616).
+- 0 two-point attempts have unknown distance; they remain included.
+
+These are descriptive observations. They do not identify causal effects.

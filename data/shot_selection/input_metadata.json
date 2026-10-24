@@ -1,0 +1,18 @@
+{
+  "input": "In-memory DataFrame: pbp",
+  "input_rows": 3227917,
+  "selected_action_rows": 621881,
+  "team_codes": null,
+  "seasons": [
+    "2025-26"
+  ],
+  "regular_season_only": true,
+  "plot_season": "2025-26",
+  "analysis_run_utc": "2026-10-24T02:21:52.598161+00:00",
+  "collection_note": "pbp is built in the setup cell from data/raw/pbp_stats season parquet files. Record the nba_api endpoint and retrieval time in that cell before sharing.",
+  "shot_rows": 219159,
+  "teams": 30,
+  "heave_rows_excluded": 1093,
+  "free_throw_rows_excluded": 57768,
+  "unknown_distance_two_pointers": 0
+}
